@@ -1,0 +1,13 @@
+Let's find cheese that meticulously well paired with my meat.
+What makes one cheese better than another? 
+It turns out that all cheeses can be categorized by a few distinct characteristics.
+The different characteristics of a cheese are known as features.
+Cheese that share similar characteristics will be our definition of the nearest neighbor.
+
+In the ML world, information about each cheese would be referred to as the data.
+We are going to need a large amount of data about cheese. So we will index cheese.com.
+This is considered factual information about cheese but also includes many opinionated discussions about cheese.
+All this data together will be a wealth of information for making decisions.
+
+A cheese expert would consider all the characteristics together to classify a given cheese.
+A nearest neighbor algorithm does something similar but in a natural language processing (NLP) way.
