@@ -11,3 +11,10 @@ All this data together will be a wealth of information for making decisions.
 
 A cheese expert would consider all the characteristics together to classify a given cheese.
 A nearest neighbor algorithm does something similar but in a natural language processing (NLP) way.
+It compares words (or phrases) from different cheeses against one another. Depending on how similar they are, a probability is returned.
+It will be a probability that the two cheeses are a good fit as a number.
+
+If you’ve ever attempted text comparisons on a large dataset you will know that it’s anything but performant.
+To overcome this, the text is converted to a collection of numbers called vectors.
+The act of converting text to numerics is known as tokenization.
+
