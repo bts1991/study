@@ -11,5 +11,6 @@
     - Priority Queue를 빠르게 구현하게 위해 만든 트리기반 자료 구조
     - Complete Binary Tree 형태를 취함
         ● 왼쪽부터 빈틈없이 채워진 이진 트리 = 모든 상위 레벨은 꽉 참 + 마지막 층만 왼쪽부터 참
-        ![alt](https://cdn.programiz.com/sites/tutorial2program/files/complete-binary-tree_0.png)
-        ![alt](C:\Users\user\Downloads\complete-binary-tree.png)
+----------
+![Complete Binary Tree](./img/complete-binary-tree.png)
+![Complete Binary Tree]([./img/complete-binary-tree.png](https://cdn.programiz.com/sites/tutorial2program/files/complete-binary-tree_0.png))
