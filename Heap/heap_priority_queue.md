@@ -22,7 +22,7 @@
   - $log_2 (n+1) = log_2 2^{h+1}=h+1$
 
 ----------
-![Complete Binary Tree](./img/complete-binary-tree.png){: width="50%" height="50%"}
+![Complete Binary Tree](../img/complete-binary-tree.png){: width="50%" height="50%"}
 
 ## 2. 왜 Complete Binary Tree 를 사용하는가?
 - 삽입 또는 삭제할 때 트리모양을 정해진 규칙으로 유지해야 시간 복잡도 $O(log n)$를를 보장
