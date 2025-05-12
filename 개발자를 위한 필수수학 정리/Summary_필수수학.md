@@ -279,6 +279,12 @@
         - x의 해를 구할 수 없음
     - 즉, $A^T$가 0으로 보내는 벡터들
 
+### Let $𝐴∈𝑅^{𝑚×𝑛}$. Prove that if the rank of 𝐴 is 𝑟, then the dimension of its null space is 𝑛−𝑟.
+- Rank-Nullity 정리에 따르면, 행렬 A의 열 개수 𝑛은 랭크 𝑟과 널 스페이스의 차원의 합입니다. 따라서 널 스페이스의 차원은 𝑛−𝑟입니다.
+- Rank-Nullity 란?
+  - rank(𝐴) + nullity(𝐴) = 열의 수
+  - A가 어떤 선형 변환을 나타낼 때, 출력 벡터 공간에 영향을 미치는 방향들과 입력은 있지만 결과가 0이 되는 방향들의 합은 항상 전체 입력 공간(열의 수) 𝑛을 완전히 설명해야 함함
+
 ### 직교성(Orthogonality)
 - 두 벡터 a와 b가 서로 직교한다
   - $a\cdot b=0$
@@ -376,6 +382,7 @@
   - $(A-\lambda I)x=0$ 을 만족하는 벡터 $x$ 찾기
   - 즉, $(A-\lambda I)x$의 Null Space(영공간) 찾기
 
+## 고유값 분해(Eigendecomposition)
 
 ## PCA 란?
 - Principal Component Analysis의 준말로, 우리 말로는 주성분 분석입니다.
@@ -400,7 +407,7 @@
 - 왜 사용하는가?
   - 고유값 분해(Eigendecomposition)는 정방행렬에서만 가능하고, 반드시 대각화 가능한 경우에만 동작
   - SVD는 정방이든 아니든, 대칭이든 아니든 관계없이 모든 실수 행렬에 대해 항상 존재 → 가장 보편적인 행렬 분해 방법
-  - 분해하는 이유는? 데이터에서 핵심 패턴만 남기고 → 불필요한 차원이나 잡음 제거
+  - 분해하는 이유는? 큰 특이값(top-k singular values)만 남기고 나머지를 제거함으로써 데이터의 핵심적인 구조만 유지한 채 차원을 줄일 수 있습니다. 이는 PCA와 유사한 방식으로 노이즈 제거와 연산 효율 개선에 사용
 
 # 5장 선형 회귀(Linear Regression)
 ## 개념
