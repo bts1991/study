@@ -51,6 +51,7 @@ $$P(A \,and\, B) = P(A|B)\times P(B)$$
   - $$P(A|B)={P(B|A)\times P(A)\over P(B)} = {P(A \,AND\, B) \over P(B)}$$
   - $$사후확률(Posteior) = {{우도(Likelihood)\times 사전확률(Prior)} \over 증거}$$
   - 우도: 관측된 데이터
+
 ## 이항 분포
 ## 베타 분포
 
