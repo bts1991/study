@@ -71,9 +71,12 @@ a more adaptive approach by combining stable relationships based on financial th
   - $$E(R_i)=R_f+\beta_i \sdot (E(R_m)-R_f)$$
     - $E(R_i)$: 자산 i의 기대 수익률
     - $R_f$: 무위험 수익률(예: 국채 금리)
+      - 투자자가 아무 위험 없이 얻을 수 있는 수익률
     - $E(R_m)$: 시장 전체의 기대 수익률(예: S&P500)
-    - $\beta_i$: 자산 i의 베타 값(시장 민감도)
+    - $\beta_i$: 자산 i의 베타 값
+      - 시장 전체 대비 자산의 민감도 (시장의 1% 수익 변화 시 자산이 얼마나 변하는가)
     - $E(R_m)-R_f$: 시장 리스크 프리미엄
+      - 위험을 감수했을 때 시장에서 기대할 수 있는 초과 수익률
 
 ### factor investment strategies
 - **자산(주식, 채권 등)의 수익률을 설명할 수 있는 요인(Factor)**들을 기반으로 자산을 선별하고 포트폴리오를 구성하는 전략
