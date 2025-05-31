@@ -1,4 +1,76 @@
 # Literature review
+- recent studies have primarily focused on enhancing technical aspects such as model 
+architecture through the application of deep learning or reinforcement learning, knowledge of factor 
+portfolios, grounded in modern portfolio theory, remains paramount.
+## Traditional portfolio theory
+- Modern Portfolio Theory (MPT)(Markowitz 1952):  investing and managing multiple assets
+⬇️
+- asset pricing model (CAPM)(Sharpe 1964): compensates investors for assuming systematic risk, i.e., market risk, alongside total risk.
+⬇️
+- factor portfolio strategies(L'Her et al. 2002): leverage a diverse set of factors that influence asset prices.
+⬇️
+⬇️
+⬇️
+⬇️
+⬇️
+### Limitaion
+- they rely on static models that lack the adaptability required to respond to rapid market shifts (Bertola 1988)
+- not fully capture the complexity of modern, dynamically evolving markets characterized by data irregularities and rapid fluctuations
+## related works
+- leveraged DL and RL techniques for portfolio optimization ( Heaton et al., 2017; Wang et al., 2021; Ma et al., 2021; Li et al., 2021): outperformed traditional financial portfolio methods , but not incorporating financial domain expertise
+
+# Methodology
+- Integrating advanced techniques, such as Deep Learning (DL) and Reinforcement Learning (RL), with traditional factor strategies
+- a novel hybrid portfolio investment method that integrates reinforcement learning with dynamic factors, called the dynamic factor portfolio model.
+- The proposed model comprises two modules
+## Dynamic factor portfolio model
+- integrates traditional factor investment methodologies with RL techniques
+- respond dynamically to shifting market conditions while leveraging the predictive capabilities of key investment factors
+- comprises two primary components: the Dynamic Factor Module (DFM) and the Price Score Module (PSM)
+### Dynamic factor module
+- adaptive scores for established investment factors, including size, value, beta, 
+quality, and investment.
+- factors are derived from factor investment strategies and dynamically adjusted by the DFM based on prevailing market conditions, capturing the evolving importance of 
+each factor.
+- making it responsive to broad economic trends that influence portfolio allocation
+### Price score module
+- analyzing asset price data, assessing both inter-asset correlations and individual 
+price patterns
+- providing real-time price signals and stock-level insights.
+### Integrated score module
+- Within the RL framework, DFM and PSM outputs are combined
+## Model optimization
+- train the DFPM with portfolio weights optimized for the Sharpe ratio
+-  achieving a dynamic balance between risk and return
+## Data
+
+# Experiment
+- employing various portfolio selection methods and reward objectives to optimize the model.
+## Baselines
+## Implementation and hyperparameters
+## Evaluation metrics
+
+# Experiment Result
+- With dynamic factor-informed knowledge, the proposed model can make portfolio decisions adaptively based on market conditions. 
+- consistently outperformed traditional portfolio strategies and State-of-the-Art (SOTA) RL methods in risk-adjusted metrics, such as the Sharpe ratio and fAPV
+- offers interpretability by identifying critical factors across varying market scenarios
+
+## The effect of the dynamic factors
+- adapts its portfolio decisions based on a comprehensive perspective that considers both macroeconomic trends and individual asset behaviors
+- ability to capture market dynamics and deliver practical advantages in portfolio management
+## Comparison with traditional portfolio strategies
+## Comparison with state-of-the-art RL methods
+## Comparisons of portfolio selection methods
+## Comparison according to the reward objective
+## Cross-Validation Results Analysis
+## Analysis of factor importance
+
+# Conclusion
+- propose a novel RL-based portfolio optimization framework: the first framework that directly incorporates these five key factor indicators into an RL model for portfolio optimization.
+- explainable RL framework: allowing for the assessment of factor importance under varying market conditions
+- demonstrate the effectiveness of dynamic factors: DFPM outperforms traditional portfolio methods, reveal that DFPM surpasses recent SOTA RL models
+
+# Literature review
 ## Traditional portfolio theory
 - leverage a diverse set of factors that influence asset prices
 - an asset’s return embodies a premium related to a specific risk factor
