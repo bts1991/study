@@ -3,21 +3,102 @@
 architecture through the application of deep learning or reinforcement learning, knowledge of factor 
 portfolios, grounded in modern portfolio theory, remains paramount.
 ## Traditional portfolio theory
-- Modern Portfolio Theory (MPT)(Markowitz 1952):  investing and managing multiple assets
+- Modern Portfolio Theory (MPT)(Markowitz 1952): “투자 자산을 똑똑하게 나눠서, 위험은 줄이고 수익은 높이자”
+  - establishing a framework for optimizing asset allocation
+  - the mean (average) and standard deviation, to quantify the return and risk inherent in stocks: 평균 수익률이 동일해도, 더 들쭉날쭉 한 자산의 위험이 크다
+  - considering covariance: assessment of risk within stock portfolios
+    - standard deviation: 한 자산의 수익률 변동성
+    - covariance: 두 자산 간 수익률의 연동성
+      - 공분산: 두 변수에 대해 편차를 서로 곱하고 더한 후 n-1로 나눈 값
+        - 분산: 하나의 변수에 대해 편차 제곱 평균
+      - 두 자산이 같은 방향으로 움직여야 공분산이 커짐
+
 ⬇️
 - asset pricing model (CAPM)(Sharpe 1964): compensates investors for assuming systematic risk, i.e., market risk, alongside total risk.
+  - 결론: 각 자산이 가져야 할 정당한(균형 잡힌) 수익률 계산
+  - 전제: 자본시장이 효율적이고 모든 투자자가 합리적으로 행동한다
+  - 빙법: 개별 자산이 시장 전체와 얼마나 함께 움직이는지를 **체계적 위험(systematic risk)**에 대한 민감도로 측정하여 얼마의 추가 보상이 필요한지를 '위험 프리미엄(risk premium)'으로 정의
+  - 공식: $E(R_i)=R_f+\beta_i \sdot (E(R_m)-R_f)$
+    - $E(R_i)$: 자산 i의 기대 수익률
+    - $R_f$: 무위험 수익률(예: 국채 금리)
+    - $E(R_m)$: 시장 전체의 기대 수익률(예: S&P500)
+    - $\beta_i$: 자산 i의 베타 값
+      - 공식: $βᵢ = \frac{\mathrm{Cov}(Rᵢ, Rₘ)}{\mathrm{Var}(Rₘ)}$
+      - 개별 자산과 시장의 상관관계를 시장의 변동성 단위로 정규화해서 표현
+    - $E(R_m)-R_f$: 시장 리스크 프리미엄
+      - 위험을 감수했을 때 시장에서 기대할 수 있는 초과 수익률
+  - 한계: 단일 요인(시장 수익률)만 고려려
+
 ⬇️
-- factor portfolio strategies(L'Her et al. 2002): leverage a diverse set of factors that influence asset prices.
+- Arbitrage Pricing Theory (APT) (Ross 1976)
+  - 결론: 자산의 기대 수익률은 여러 가지 경제적 위험 요인(factors)에 의해 결정된다, foundation for factor-based portfolio investment strategies
+  - 전제: absence of arbitrage opportunities, 시장에서 무위험 이익(차익거래)이 존재하지 않는다, 동일한 위험을 가진 자산은 동일한 수익률을 가져야 한다
+  - 방법: 인플레이션, 금리, 산업 생산, 유가, 환율 등 다양한 거시경제 요인들이 자산 수익률에 영향을 준다고 봄
+  - 공식: $E(R_i) = R_f + b_1 F_1 + b_2 F_2 + \cdots + b_n F_n$
+  
+| 기호      | 의미                        |
+| -------- | ------------------------- |
+| $E(R_i)$ | 자산 i의 기대 수익률              |
+| $R_f$    | 무위험 수익률                   |
+| $F_n$    | 위험 요인 (factor)의 프리미엄      |
+| $b_n$    | 자산이 그 요인에 얼마나 민감한지 (감마 값) |
+
 ⬇️
+- The Fama-French three-factor model(Fama and Kenneth 1993)
+  - 결론: portfolios comprising value stocks with a high book-to-market ratio and small-cap stocks with a low market capitalization exhibit superior returns
+  - 방법: incorporating value and size factors in conjunction with the CAPM
+
 ⬇️
+- Carhart (1997) introduced the momentum factor, another crucial risk factor
+  - capture the persistence of past returns into the future
+
 ⬇️
+- Fama and French (2015) introduced the concept of profitability(=quality) and investment
+  - profitability factor: net income to capital
+    - with a high profitability factor tend to have higher expected returns
+  - investment factor
+    - "설비 투자도 많이 하고, 빠르게 성장하는 회사가 수익도 좋다"는 생각을 반박
+    - 오히려 과도한 투자는 낭비나 수익성 악화로 이어질 수 있음
+
 ⬇️
-⬇️
+- the low volatility factor (Baker et al. 2011)
+  - stocks with lower volatility exhibit higher expected returns
 ### Limitaion
 - they rely on static models that lack the adaptability required to respond to rapid market shifts (Bertola 1988)
 - not fully capture the complexity of modern, dynamically evolving markets characterized by data irregularities and rapid fluctuations
 ## related works
 - leveraged DL and RL techniques for portfolio optimization ( Heaton et al., 2017; Wang et al., 2021; Ma et al., 2021; Li et al., 2021): outperformed traditional financial portfolio methods , but not incorporating financial domain expertise
+- Yang et al. (2020) back tested Dow Jones 30 stocks
+  - ensemble trading strategy: incorporates three actor-critic-based algorithms: Proximal Policy Optimization (PPO), Advantage Actor Critic (A2C), and Deep Deterministic Policy Gadient (DDPG)
+- Wu et al. (2021) leverages neural networks, specifically Convolutional Neural Network (CNN) and Recurrent Neural Network (RNN)
+  - predicting future stock prices
+  - predictions were used as inputs for the RL model
+- Wang et al. (2021) proposed a novel ensemble portfolio optimization framework
+  - Mode decomposition (모드 분해) + Bi-LSTM (양방향 LSTM) + RL-based model
+    - 모드 분해: 시계열 데이터를 여러 주기(주기성 패턴)로 나누어 분석
+    - 양방향 LSTM: 과거와 미래 방향의 정보를 모두 고려
+- Sun et al. (2024) improved the architecture of the PPO agent
+  - introducing a GraphSAGE-based feature extractor
+  - capture complex non-Euclidean relationships between market indices, industry indices, and stocks
+    - PPO agent: 강화학습 알고리즘, 안정적이고 효율적인 학습을 위해 정책(policy)의 급격한 변화를 제한
+    - GraphSAGE-based feature extractor: 그래프 신경망(GNN)의 한 종류로,
+각 노드(예: 종목, 지수)의 정보를 이웃 노드(관련 종목 등)로부터 **효율적으로 추출 및 요약(aggregate)**함
+    - non-Euclidean relationships: 금융 시장의 구조는 **복잡한 연결 관계(예: 업종 내 상관성, 섹터 간 영향 등)**로 단순 직선 거리를 정의할 수 없음
+- 딥러닝만 사용하는 게 아니라, 다양한 방법들과 통합한 대안적 접근 방식도 존재
+  -  Chen et al. (2019) introduced a fuzzy grouping genetic algorithm
+  -  Chen et al. (2021) devised a grouping trading strategy portfolio
+- integrates existing finance theories with DL or RL
+  - Jang and Seong (2023) combined modern portfolio theory and RL and solved a multi-mode problem using Tucker decomposition
+  - Tucker decomposition
+    - 고차원 텐서(3차원 이상)를 저차원 구조로 분해하는 텐서 분해 기법
+    - PCA의 고차원 확장판
+    - 복잡한 데이터를 **핵심 요인(core tensor)**과 **축별 요인(factor matrices)**로 압축해 분석
+### Limitaion
+- struggle to adapt to rapidly changing market conditions, integrate domain-specific financial insights, and maintain interpretability
+- hinders flexibility in rapidly changing market environments.
+- lacks the use of the most important factors in the financial 
+market
+
 
 # Methodology
 - Integrating advanced techniques, such as Deep Learning (DL) and Reinforcement Learning (RL), with traditional factor strategies
