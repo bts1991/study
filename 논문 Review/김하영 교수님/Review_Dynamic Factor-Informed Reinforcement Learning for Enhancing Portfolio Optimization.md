@@ -104,22 +104,69 @@ market
 - Integrating advanced techniques, such as Deep Learning (DL) and Reinforcement Learning (RL), with traditional factor strategies
 - a novel hybrid portfolio investment method that integrates reinforcement learning with dynamic factors, called the dynamic factor portfolio model.
 - The proposed model comprises two modules
+- account for macroeconomic conditions and the unique characteristics of individual stock prices
 ## Dynamic factor portfolio model
 - integrates traditional factor investment methodologies with RL techniques
 - respond dynamically to shifting market conditions while leveraging the predictive capabilities of key investment factors
 - comprises two primary components: the Dynamic Factor Module (DFM) and the Price Score Module (PSM)
+- achieve adaptive, balanced portfolio allocations that maximize the Sharpe ratio while remaining robust to changing market conditions.
 ### Dynamic factor module
-- adaptive scores for established investment factors, including size, value, beta, 
-quality, and investment.
-- factors are derived from factor investment strategies and dynamically adjusted by the DFM based on prevailing market conditions, capturing the evolving importance of 
-each factor.
-- making it responsive to broad economic trends that influence portfolio allocation
+- 의미
+  - computes scores based on key factors—size, value, beta, quality, and investment
+  - represent prevailing market conditions
+  - capturing the evolving importance of each factor.
+  - dynamically adjust portfolio allocations in response to broader economic trends
+- 개요
+  - macro market data ➡️ calculate factor importance weights (𝑀) ➡️ the impact of each risk factor on portfolio performance ➡️ integrating factor importance weights 𝑀 and factor data ➡️ 시장 상황을 반영한 다섯 가지 요인으로부터 계산된 자산별 값을 동적으로 나타내는 요인 점수(dynamic factor scores)를 학습
+  - 과거 시점 중, 어느 시점이 중요한지를 분석하는 것이 중점
+- 과정
+  - Step 1: LSTM hidden states 생성
+    - LSTM에 input으로 x(4x1) 입력하여 K개의 hidden states(32x1) 생성
+      - data dimension (𝑃) = 4(the number of macroeconomic variables)
+      - look back window size (K) = 18
+  - Step 2: Attention score 계산
+    - $$e_k = W_a^\top \cdot \tanh\left( W_b \cdot [\mathbf{h}_k ; \mathbf{h}_K] + W_c \cdot \mathbf{x}_k \right)$$
+    - $W_c$: 18 x 4 (K x P)
+    - $W_b$: 18 x 64 (K x 2H)
+    - $W_a^T$: 1 x 18 (1 x K)
+    - $\begin{aligned} e_k 
+    &= (1 * 18)\cdot tahn((18*64\cdot [64*1])+(18*4)\cdot (4*1))\\
+    &=(1*18)(18*1)\\
+    &=(1)
+    \end{aligned}$
+  - Step 3: Softmax → Attention weights($\alpha_k$)
+  - Step 4: Context vector 계산
+    - $$c = \sum_{k=1}^{K} \alpha_k \cdot h_k$$ 
+    - $c=\alpha_k\cdot (32*1)$
+    - 현재 시점 기준으로, 과거 18개 시점의 데이터를 분석한 요약 결과
+  - Step 5: Dense layer + tanh 적용
+    - Dense layer를 통과하면 **출력 차원이 요인의 수 P=5**로 조정됨
+    - 최종적으로 얻는 벡터 $( \mathbf{M} \in \mathbb{R}^5)$ 는 다음과 같습니다
+      - $M = [M_{\text{value}},\; M_{\text{size}},\; M_{\beta},\; M_{\text{quality}},\; M_{\text{investment}}]$
+      - 각 요인이 현재 시장 상황에서 얼마나 중요한지를 나타냄
+
+
+
+  - Value: the relative valuation of an asset
+    - Ex. price-to-earnings (P/E), price-to-book (P/B) ratios
+    - Lower ratios indicate a higher potential for undervaluation.
+  - Size: the market capitalization(시가 총액) of an asset, distinguishing between small-cap and large-cap stocks.
+    - Small-cap stocks often exhibit higher growth potential
+  - Beta: asset's sensitivity to overall market movements
+  - a beta greater than 1 indicating higher volatility than the market and less than 1 indicating lower volatility.
+  - Quality: profitability, earnings stability, and financial health
+    - High-quality stocks are generally more resilient during market downturns.
+  - Investment: Captures growth in capital expenditures or reinvestment rates, linked to the asset’s potential for future growth.
+- Temporal Attention-LSTM (TALSTM)
+  - combines an LSTM model with an attention mechanism
+  - calculating the attention score as a weighted sum of the hidden state at each time step and the value of the last time step
 ### Price score module
-- analyzing asset price data, assessing both inter-asset correlations and individual 
-price patterns
+- consolidates stock price data, evaluating both inter-stock relationships and individual price patterns within a portfolio.
 - providing real-time price signals and stock-level insights.
+- capture realtime price fluctuations
 ### Integrated score module
-- Within the RL framework, DFM and PSM outputs are combined
+- employs an RL framework
+  - dynamically weights the outputs of DFM and PSM based on their relevance to current market conditions
 ## Model optimization
 - train the DFPM with portfolio weights optimized for the Sharpe ratio
 -  achieving a dynamic balance between risk and return
