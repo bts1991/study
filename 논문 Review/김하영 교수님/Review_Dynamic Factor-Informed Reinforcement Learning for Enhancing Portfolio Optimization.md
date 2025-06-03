@@ -113,12 +113,23 @@ market
 ### Dynamic factor module
 - 의미
   - computes scores based on key factors—size, value, beta, quality, and investment
-  - represent prevailing market conditions
-  - capturing the evolving importance of each factor.
-  - dynamically adjust portfolio allocations in response to broader economic trends
-- 개요
-  - macro market data ➡️ calculate factor importance weights (𝑀) ➡️ the impact of each risk factor on portfolio performance ➡️ integrating factor importance weights 𝑀 and factor data ➡️ 시장 상황을 반영한 다섯 가지 요인으로부터 계산된 자산별 값을 동적으로 나타내는 요인 점수(dynamic factor scores)를 학습
+  ➡️ updates each factor’s weight based on recent performance data
+  ➡️ adaptively prioritize 
+factors that are most relevant to current market conditions
+    - Value: the relative valuation of an asset
+      - Ex. price-to-earnings (P/E), price-to-book (P/B) ratios
+      - Lower ratios indicate a higher potential for undervaluation.
+    - Size: the market capitalization(시가 총액) of an asset, distinguishing between small-cap and large-cap stocks.
+      - Small-cap stocks often exhibit higher growth potential
+    - Beta: asset's sensitivity to overall market movements
+      - a beta greater than 1 indicating higher volatility than the market and less than 1 indicating lower volatility.
+    - Quality: profitability, earnings stability, and financial health
+      - High-quality stocks are generally more resilient during market downturns.
+    - Investment: Captures growth in capital expenditures or reinvestment rates, linked to the asset’s potential for future growth.
+- 사용 모델
+  - Temporal Attention-LSTM (TALSTM) = LSTM + Attention
   - 과거 시점 중, 어느 시점이 중요한지를 분석하는 것이 중점
+  - 개요: macro market data ➡️ calculate factor importance weights (𝑀) ➡️ the impact of each risk factor on portfolio performance ➡️ integrating factor importance weights 𝑀 and factor data ➡️ 시장 상황을 반영한 다섯 가지 요인으로부터 계산된 자산별 값을 동적으로 나타내는 요인 점수(dynamic factor scores)를 학습
 - 과정
   - Step 1: LSTM hidden states 생성
     - LSTM에 input으로 x(4x1) 입력하여 K개의 hidden states(32x1) 생성
@@ -144,32 +155,56 @@ market
     - 최종적으로 얻는 벡터 $( \mathbf{M} \in \mathbb{R}^5)$ 는 다음과 같습니다
       - $M = [M_{\text{value}},\; M_{\text{size}},\; M_{\beta},\; M_{\text{quality}},\; M_{\text{investment}}]$
       - 각 요인이 현재 시장 상황에서 얼마나 중요한지를 나타냄
+  - Step 6: 종목별 Factor Score(stock 개수 * 5)와 Factor Importance(5、)와 multiplication
+    - ➡️ 최종결과: DynamicFactorScore（stock 개수、） 
 
 
 
-  - Value: the relative valuation of an asset
-    - Ex. price-to-earnings (P/E), price-to-book (P/B) ratios
-    - Lower ratios indicate a higher potential for undervaluation.
-  - Size: the market capitalization(시가 총액) of an asset, distinguishing between small-cap and large-cap stocks.
-    - Small-cap stocks often exhibit higher growth potential
-  - Beta: asset's sensitivity to overall market movements
-  - a beta greater than 1 indicating higher volatility than the market and less than 1 indicating lower volatility.
-  - Quality: profitability, earnings stability, and financial health
-    - High-quality stocks are generally more resilient during market downturns.
-  - Investment: Captures growth in capital expenditures or reinvestment rates, linked to the asset’s potential for future growth.
-- Temporal Attention-LSTM (TALSTM)
-  - combines an LSTM model with an attention mechanism
-  - calculating the attention score as a weighted sum of the hidden state at each time step and the value of the last time step
 ### Price score module
 - consolidates stock price data, evaluating both inter-stock relationships and individual price patterns within a portfolio.
+  - 과정: **weight-shared depthwise convolution** ➡️ **pointwise convolution**
 - providing real-time price signals and stock-level insights.
 - capture realtime price fluctuations
+#### weight-shared depthwise convolution
+- extract historical price information
+- 과정
+  - Input: each stock’s historical price data(t x n)
+  - Kernel: 하나의 필터를 여러 자산에 동일하게 공유(k x 1）
+  - Output: capture common patterns in price movements (t' x n)
+    - t' = t-k+1
+    - 점점 시간 축이 감소함(t ➡️ t' ➡️ t'')
+- 결과: identifying correlations between price trends across different assets
+#### pointwise convolution
+- capture inter-asset relationships
+- pointwise 과정
+  - shape: C, H, W
+  - Input: depthwise conv의 결과(t' x n)
+    - ➡️ Reshpe: n x t' x 1
+  - Kernal: 채널 수가 n개인 1 x 1 (stock의 수와 동일하게)
+  - Output: n x t' x 1
+    - ➡️ Reshpe: t' x n
+  - (결국, (n x t')와 (n x n)의 곱과 동일)
+- 결과: inter-stock correlations
+- 왜 "pointwise"인가?
+  - 커널 크기가 공간적으로 (혹은 시간적으로) **한 지점(1×1)**만 보기 때문
+  - 커널 크기가 1×1인 합성곱 연산
+  - 공간/시간은 고정한 상태로, 다수의 채널을 가로지르며 연산
 ### Integrated score module
-- employs an RL framework
-  - dynamically weights the outputs of DFM and PSM based on their relevance to current market conditions
+- calculates the stock weight score
+  - 과정: Factor scores + Price scores ➡️ normalized investment weights ➡️ SoftMax
+- 수식
+  - $$\text{Stock Weight Score} = W_p^T \tanh(W_F{FS} + W_T{PS})$$
+  - (1,m) tanh((s,m)(m,)+(s,m)(m,))
+  - = (1,m)(s, )???????
+    - m: the number of assets, s: rebalancing period
 ## Model optimization
 - train the DFPM with portfolio weights optimized for the Sharpe ratio
--  achieving a dynamic balance between risk and return
+- rooted in Markov Decision Process (MDP) ➡️ maximizes the expectation of the sum of all discounted rewards
+  - Agent Receives $s_t$ ➡️ Chooses an Action $a_t$
+    - action: variable $w_i$(투자비율)
+    - state: prices of assets, factors, and macroeconomic data(Input data)
+    - rewards: ROE, Sharpe ratio
+      - Sharpe ratio: primary reward metric to maximize portfolio profitability
 ## Data
 
 # Experiment
