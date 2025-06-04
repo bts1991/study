@@ -205,6 +205,25 @@ factors that are most relevant to current market conditions
     - state: prices of assets, factors, and macroeconomic data(Input data)
     - rewards: ROE, Sharpe ratio
       - Sharpe ratio: primary reward metric to maximize portfolio profitability
+      - $J = E_{p(\tau)} \left[ H_T \right]$
+        - $p(\tau)$: 하나의 에피소드에 대한 확률 분포
+        - $H_T = \frac{A_T}{V_T}$ : Sharpe ratio
+        - $A_T = \frac{1}{T} \sum_{t=1}^{T} r_t$
+          - 모든 시점의 보상의 평균
+        - $V_T = \sqrt{ \frac{1}{T} \sum_{t=1}^{T} (r_t - A_T)^2 }$
+          - 모든 시점의 보상에 대한 분산
+        - $r_{t+1} = R(s_t, W_t, s_{t+1}) = \left(W_t \cdot \frac{ P_{t+1}}{P_t} - \lambda C \right)$
+          - $s_t$ 상태에서, $W_t$ 라는 행동을 취한 후, $s_{t+1}$ 상태가 되었을 때의 보상
+          - 금융자산은 t+1 시점이 되어야, t 시점의 투자 성과를 판단할 수 있음
+          - **즉, t 시점에서 투자 비율을 반영한 수익률 벡터**
+          - 상세 설명
+            - $P_t$: 시점 t의 자산 가격 벡터
+            - $W_t$: 시점 t의 포트폴리오 투자 비중 벡터
+            - $P_t\over P_{t+1}$: t+1 시점에서의 수익률
+            - $W_t\cdot {P_t\over P_{t+1}}$: 투자 비율을 고려한 수익률
+            - $\lambda C$: 가중치를 고려한 거래비용
+      - 정책 $\pi$ = $s_t$에서 $W_t$를 선택할 확률적 규칙칙
+        - J 값을 최대화 하도록 $\pi$를 학습
 ## Data
 
 # Experiment
