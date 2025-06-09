@@ -77,54 +77,51 @@
   - EQSarnp strategy
     - financial data augmentati on when pretraining to overcome the news scarcity problem
     - enhancing tl1e generalization ability of GNNs on feature-imbalanced datasets
-
-- 금융 뉴스에서 얻을 수 있는 **미세한 통찰(insight)**조차도 주가에 유의미한 영향을 미칠 수 있는 신호
-- 뉴스와 소셜 미디어 등 비정형 정보원을 통한 투자 정보 보강
-- 뉴스에 의해 유발되는 결정론적 요인을 예측하려고 시도
-- **두 가지 주요 특징(feature)**을 기반으로 예측
-  - 시계열적 수치 데이터: 시가, 종가, 거래량 등
-  - 정형 테이블 형태 데이터: 기술적 지표들 (예: RSI, MACD 등)
-- 가정상의 한계
-  - 모든 주식의 거래 신호가 상호 독립적이다
-  - But, 펀드 리밸런싱, 레버리지 조정, 지연효과(lag effect) 등으로 인해 서로 영향을 주고받음
-  - 한 섹터에서 발생한 뉴스가 **공급망(supply chain)**이나 시장 트렌드를 통해 다른 기업에도 영향
-  - 주식 시장의 네트워크적 구조에 주목(그래프 신경망(Graph Neural Networks, GNN)의 발전 덕분)
-    - 산업 분류 기반의 관계 [2]
-    - 공급망 구조 [3]
-    - 사업 파트너십 [6]
-    - 리드-래그(lead-lag) 상관관계 [21]
-    - 인과 관계 [23]
-    - 뉴스 공동 출현 관계 [24]
-    - But, 모든 주식을 동일한 방식으로 표현하는 **균일 노드 임베딩(uniform node representation)**을 가정
-  - 기존 GNN은 **롱테일 분포(long-tailed distribution)**가 존재하는 현실 시장에서는 부적절
-  - **희귀 주식(rare stocks)**에 대한 정보는 매우 제한적
-  - 그래프 attention 네트워크(GAT) 기반 모델이 중요한 주식에만 주의를 집중하는 편향된 attention
 # Related Work
-- 다음 세 가지 범주
 ## Time-Series Stock Prediction
-- **각 주식을 시퀀스 기반의 잠재 표현(sequential latent representation)**으로 인코딩하여 향후 작업에 활용
-- 순환 신경망(RNN) 구조에 기반
-  - LSTM (Long Short-Term Memory) [37]
-  - GRU (Gated Recurrent Unit) [38]
-  - Transformer [39]
-- 시간 축을 따라 변화하는 패턴을 포착
-  - 주식의 시계열을 인코딩 + 시장 요인 [42], 투자자 행동 [43], 기술적 지표를 함께 활용
-- REST [44]와 같은 관계 기반 이벤트 추론(Relational Event-driven Stock Trend forecasting) 연구는 기업의 공시 정보 등을 활용해 뉴스 기반 반응을 모델링
-- Digger-Guider [45]는 고빈도(high-frequency) 요인까지 반영하여 예측 성능을 끌어올림
-- 대부분 **"모든 주식의 거래 신호는 서로 독립적이다"**는 가정을 바탕으로 하며, 이는 모멘텀 스필오버(momentum spillover) 등 실제 시장의 특성을 반영하지 못함
+- encoding an individual stock ➡️ a sequential latent representation ➡️ downstream tasks
+  - RNNs based: LSTM, GRU, Transformer
+  - capture the underlying tune-varying patterns from multiple time steps
+- encode the time series for each stock using RNNs
+  - PEN [40], MAN-SF [12], and MTR-C [41]
+- mningling different types of market factors
+  - relational event-driven stock trend forecasting (REST) [44]
+    - utilizes the event information from the company's announcements
+- produce powerful high-frequency stock factors
+  - Digger-Guider [45]
+  - significantly improve stock trend prediction performance
+- But, 여전히 문제가 되는 Assumption
+  - the trading signals of all stocks are mutually exclusive
+  - Why? financial markets are highly internally coupled, momentum spillover
 ## Graph-Based Stock Prediction
-- 같은 산업군에 속한 주식은 자연스럽게 서로의 움직임에 영향을 받음
-  - 어떤 주식의 가격 변화가 다른 주식의 미래 움직임을 유도하는 선행 관계(lead-lag relation)
-  - 기술 혁신이 타 기업에 미치는 영향을 모델링하려는 시도들
-- 주식 시장은 **그래프(graph)**로 표현
-  - 노드는 주식을 나타내고
-  - 엣지는 다음과 같은 관계 유형: 산업 카테고리(category) [2], 공급망 연관성 [3], 사업 파트너십 [6], 가격 상관관계 [23], 뉴스 공동 등장 [21], 인과 관계 [24] 
-- 대표적인 그래프 기반 모델
+- 시장 현실: the movement of each entity is inevitably in fluenced by its peer entities [46]
+  - a lead-lag effect in the stock market
+- conceptualize the stock market as a graph
+  - To model this intraindustry phenomenon
+  - node: each entity
+  - edges: relations
+    - industry category [2], supply chain [23], business partnership [6], price correlation [3], lead-lag correlation [2], and causal effect [21]
+- GNNs
+  - THGNN [3] generates a temporal and heterogeneous graph for graph aggregation operation. ESTIMATE [2], utilizin g hypergraphs based on industry classifications, captures nonpairwise correlations among stocks. SAMBA [49] models dependencies between daily stock features by utilizing a bidirectional Mamba block and an adaptive graph convolution module
   - THGNN [3]: 하이퍼그래프를 통해 시간 및 관계 기반 특성을 통합
   - ESTIMATE [2]: 하이퍼그래프 및 웨이블릿 attention을 통해 주식 간 상관관계 포착
   - SAMBA [49]: 양방향 Mamba 블록 및 적응형 그래프 합성 모듈을 활용
-- 그래프를 통해 주변 주식으로부터의 영향을 노드 임베딩에 통합하여 주가 변동을 예측
+- aggregating peer influences ➡️ update node representations to capture neighbor-induced movement
 ## News-Based Stock Prediction
+- financial news [40], [50], [51] or social media posts [7], [20]
+  - external information beyond the trading market
+- the graph convolutional networks (GCNs)
+  - multi-source aggregated classification (MAC) [l]
+  - aggregate the effects of news on related companies
+- aggregate various features such as technical indicators and textual news
+  - NumHTML [52] and multi-view fusion network (MFN) [53]
+- adapt to the market dynamics
+  - the time-varying structure of stock networks: combining stock interactions and news information
+  - AD-GAT [15] and DANSMP [6]: 
+
+
+
+
 - 정형 재무 정보 외에 뉴스나 소셜 미디어 정보를 활용해 추가적인 인사이트 획득
   - MAC (Multi-source Aggregated Classification) [1]: 기술적 지표와 뉴스 텍스트를 결합하여 예측
   - NumHTML [52], MFN (Multi-view Fusion Network) [53]: 다양한 피처(뉴스, 기술지표 등)를 통합
