@@ -115,29 +115,145 @@
   - aggregate the effects of news on related companies
 - aggregate various features such as technical indicators and textual news
   - NumHTML [52] and multi-view fusion network (MFN) [53]
-- adapt to the market dynamics
-  - the time-varying structure of stock networks: combining stock interactions and news information
-  - AD-GAT [15] and DANSMP [6]: 
-
-
-
-
-- 정형 재무 정보 외에 뉴스나 소셜 미디어 정보를 활용해 추가적인 인사이트 획득
-  - MAC (Multi-source Aggregated Classification) [1]: 기술적 지표와 뉴스 텍스트를 결합하여 예측
-  - NumHTML [52], MFN (Multi-view Fusion Network) [53]: 다양한 피처(뉴스, 기술지표 등)를 통합
-- 뉴스와 가격 신호의 상호작용을 반영한 그래프 기반 모델
-  - AD-GAT [15], DANsmp [6]: 뉴스 및 시계열 기반 엣지를 반영한 GAT 변형
-  - MSMF [54]: modality 보완성과 다양성을 고려해 구성한 블렌딩 네트워크
-- 롱테일 문제에 대해 충분한 고려가 없으며, 다양한 모달리티를 단순히 **병합(concatenation)**하는 방식
-- 뉴스와 가격 정보 간 상호작용을 깊이 있게 활용하기 어렵고, 뉴스 전파(news propagation) 메커니즘을 모델링하기에도 한계
-- 본 논문은 롱테일 분포를 명시적으로 고려한 pretraining 전략을 통해 그래프 attention 모델의 일반화 성능을 향상시키는 방식을 제안
+- adapt to the market dynamics: combining stock interactions and news information
+    - using time series of prices, market sentiments from news, etc
+      - AD-GAT(Graph Attention Technic) [15] and DANSMP [6]
+    - balances complementarity and redundancy across modalities
+      - Multi-scale multi-modal fusion (MSMF) [54]: integrating the modality completion encoder, multiscale feature extractor, and fusion mechanism.
+- But, 여전한 문제
+  - lack of consideration for the long-tail effect
+  - silmply concatenate features from different modalities
+  - difficult to fully and effectively leverage news information and model the propagation of news impact within stock networks
+- 해결 방안
+  - propose a pretraining strategy for GATs in finance
+  - enables the model to proactively adapt to the imbalanced feature distribution
+  - enhancing the generalizability
 # Problem Statement
-- 일반적으로 시계열 예측(forecasting)은 회귀 문제로 간주
-- 주가 방향성을 예측하는 것이 그 자체의 가격을 예측하는 것보다 더 중요한 문제로 간주
-- 기존 연구들은 주식의 가격 시계열을 활용하여, 특정 시점의 **특징(features)**을 기반으로 그 다음 날의 가격이 상승할지 하락할지를 분류하는 모델을 학습하는 방식으로 접근
-- 
+- a classification method optimized through an objective function for classification
+   -  predicting the exact value of stock prices is far more challenging than predicting price movements
+   - outputting a class label that indicates the rise or fall of stocks
+   - comparing whether the stock price on the current trading day is higher than that of the previous trading day
+   - leverage trimodal features on the (t−1)th day as input features to predict the movements (labels)
+   - ![alt text](image.png)
+- three feature modalities
+  - 1. textual news corpora T
+    - labeled the relevant stocks impacted by each news item
+  - 2. historical time-series trading signals
+    - ![alt text](image-2.png) from past T trading days
+    - ![alt text](image-4.png)
+      - transaction features of stock i on the Tth day
+      - the highest and lowest price, opening and closing price, trade volume, and rankings of these values over 5 days, 20 days, and 60 days
+  - 3. tabular(테이블 형식) technical indicators
+    - ![alt text](image-3.png)
+    - Moving Average Indicators: smooth price signals over time to identify trends and patterns inherent in price movement
+    - Momentum Indicators: evaluate the strength and speed of price changes and detect potential trend reversals or continuations
+    - Volatility Indicators: quantify the price volatility and gauge the level of risk in the market
+    - Volume Indicators: assess the relationship between price and tracting volume and identify the accumulation or distribution of a security
+- 목표
+  - integrate trunodal features + acco,runodate the long-tailed feature distribution
+
 # PA-TMM Architecture
+- key motivation: dealing with the long tail effect in feature distribution
+- consists of two subnetworks
+  - cross-modal fusion module
+    - tackles the missing textual modality
+    - integrates cross-modal information
+    - automatically generating news sentiments and hybrid stock representations
+  - graph dual-attention module
+    - dynamically infers a partial-bipartite stock attention network
+    - considering the news- and price-induced interactions separately
 ## Cross-Modal Fusion Module
+- cross-stream architecture
+  - address the missing textual modality
+    - 서로 다른 데이터 흐름(뉴스, 주가, 지표 등)을 나란히 처리하고 결합하는 구조
+  - generate sentiment prompts for other stocks
+  - integrate trimodal information including time series (trading signals), tabular features (technical indicators), and natural languages (textual news)
+### 1. Pseudo-News Padding and Activation State
+- news may be absent for certain stocks on a given day
+  - fill the news position with pseudo-news
+  - differentiate pseudo-news from the real news
+    - mutually exclusive subsets on the day 𝑡
+    - a nonactivation subset 𝑉⁽⁰⁾
+      - 𝑖 ∈ 𝑉⁽⁰⁾: stock 𝑖 contains price-only information
+    - an activation subset 𝑉⁽¹⁾
+      - 𝑖 ∈ 𝑉⁽¹⁾: the presence of real news
+### 2. Representation Learning
+- trimodal features ➡️ representations for each stock
+- textual news
+  - pretrained language model BERT [55]를 이용, feature extractor
+  - encode the lth textual sequence into a vector
+    - ![alt text](image-5.png)
+  - news representation: the average of all these embeddings belonging to the same stock
+    - ![alt text](image-6.png)
+    - L: the number of stock-specific news on the target trading day
+- time-series trading signals
+  - the bidirectional LSTM (Bi-LSTM)
+    - encode the time-series trading signals into a vector
+    - ![alt text](image-7.png)
+    - capture the trading context of each stock
+  - concatenating historical trading signals
+    - ![alt text](image-9.png)
+- technical indicators
+  - TabNet encoder
+    - ![alt text](image-10.png)
+    - the tabular features ➡️ a continuous vector space
+  - ![alt text](image-11.png)
+- 최종 결과: two movement
+  - news-induced movement: knowledge contained within mᵢ ∈ ℝᵈⁿ 
+  - price-induced movement: knowledge contained within both pᵢ ∈ ℝᵈᵖ and qᵢ ∈ ℝᵈᵠ
+### 3. Modal Decomposition
+- news-related information + price-related information ➡️ trimodal representations
+- four different spaces
+  - news-stream integration
+    - 1) modal-specific feature extraction
+    - 2) modal-shared feature extraction
+  - price-stream integration
+    - 3) modal-specific feature extraction
+    - 4) modal-shared feature extraction
+  - modal-specific feature: 특정 종목에 대한 특징
+  - modal-shared feature: 시장 또는 섹터 전반에 대한 특징
+  - ![alt text](image-12.png)
+  
+| 기호                            | 의미                       |
+| -------------------------------- | ------------------------ |
+| $m_i$                            | 뉴스 임베딩 벡터 (BERT 기반)      |
+| $p_i$                            | 시계열 가격 벡터 (Bi-LSTM 기반)   |
+| $q_i$                            | 기술 지표 벡터 (TabNet 기반)     |
+| $[p_i \| q_i]$                   | 가격 정보와 기술 지표를 이어붙인 벡터    |
+| $\sigma$                         | 비선형 활성화 함수 (예: ReLU)     |
+| $u_i^m \in \mathbb{R}^{d_r}$     | 뉴스 전용(news-specific) 표현  |
+| $v_i^m \in \mathbb{R}^{d_r}$     | 뉴스 공유(news-shared) 표현    |
+| $u_i^p \in \mathbb{R}^{d_r}$     | 가격 전용(price-specific) 표현 |
+| $v_i^p \in \mathbb{R}^{d_r}$     | 가격 공유(price-shared) 표현   |
+| $W$ | 학습 가능한 선형 변환 가중치 행렬      |
+- $W$ shape
+  - $W_{um} \in \mathbb{R}^{d_r \times d_m}$
+  - $W_{vm} \in \mathbb{R}^{d_r \times d_m}$
+  - $W_{up} \in \mathbb{R}^{d_r \times (d_p+d_q)}$
+  - $W_{vp} \in \mathbb{R}^{d_r \times (d_p+d_q)}$
+- orthogonal loss
+  - ![alt text](image-13.png)
+  - ensure the independence of the decomposed modal-specific spaces from the modal-shared spaces ➡️ orthogonal constraint
+  - 이 손실 함수는 위 가중치 행렬 간의 내적한 행렬의 Frobenius Norm(전체 요소의 에너지)을 최소화 ➡️ 특화 표현과 공유 표현이 서로 겹치지 않도록 (즉, 직교하도록) 만듦 ➡️ 강제 분리: modal-shared feature와 modal-specific feature가 서로 다른 정보를 담도록
+  - 없다면? hared vector와 specific vector가 같은 정보를 학습할 수 있음
+#### Modal Integration
+- modern behavioral finance theory [6], [57], [58]
+  - investors are considered irrational and often swayed by opinions expressed in the media
+- Media sentiment: investors' expectations ➡️ stock price movements
+- a modal integration layer for $h_i^{pmt}$
+  - capture the news-driven sentiment prompts
+  - ![alt text](image-14.png)
+    - $u_i^m \odot v_i^p$: 원소별 곱 (element-wise product) ➡️ 상호작용 반영
+    - $u_i^m||(u_i^m \odot v_i^p)||v_i^p$: 세 백터 연결
+    - $W_{zr} \in \mathbb{R}^{2 \times 3d}$: 2차원 감성 출력을 위한 학습된 선형 변환 행렬
+  - $h_i^{pmt} \in \mathbb{R}^2$: 해당 종목이 긍정적인 감성에 속할지, 부정적인 감성에 속할지를 확률 분포로 출력
+    - ➡️ **뉴스 감성을 양극(positive vs negative)**으로 분류한 2차원 감성 프롬프트
+- aligns with the MPA(Movement Prompt Adaptation) strategy
+  - enhances our model's generalization performance
+- a modal integration layer for $h_i^{hyb}\in \mathbb{R}^{d_h}$
+  - the stock representation
+  - ![alt text](image-19.png)
+  - 
 ## Graph Dual-Attention Module
 ## Computational Complexity
 # Model Optimization
