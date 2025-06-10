@@ -234,27 +234,32 @@
 - orthogonal loss
   - ![alt text](image-13.png)
   - ensure the independence of the decomposed modal-specific spaces from the modal-shared spaces ➡️ orthogonal constraint
-  - 이 손실 함수는 위 가중치 행렬 간의 내적한 행렬의 Frobenius Norm(전체 요소의 에너지)을 최소화 ➡️ 특화 표현과 공유 표현이 서로 겹치지 않도록 (즉, 직교하도록) 만듦 ➡️ 강제 분리: modal-shared feature와 modal-specific feature가 서로 다른 정보를 담도록
-  - 없다면? hared vector와 specific vector가 같은 정보를 학습할 수 있음
+  - 이 손실 함수는 위 가중치 행렬들을 서로로 내적한 행렬의 Frobenius Norm(전체 요소의 에너지)을 최소화 ➡️ 특화 표현과 공유 표현이 서로 겹치지 않도록 (즉, 직교하도록) 만듦 ➡️ 강제 분리: modal-shared feature와 modal-specific feature가 서로 다른 정보를 담도록
+  - 없다면? shared vector와 specific vector가 같은 정보를 학습할 수 있음
 #### Modal Integration
 - modern behavioral finance theory [6], [57], [58]
   - investors are considered irrational and often swayed by opinions expressed in the media
-- Media sentiment: investors' expectations ➡️ stock price movements
-- a modal integration layer for $h_i^{pmt}$
+  - Media sentiment: investors' expectations ➡️ stock price movements
+- news-stream integration for $h_i^{pmt}$
   - capture the news-driven sentiment prompts
   - ![alt text](image-14.png)
-    - $u_i^m \odot v_i^p$: 원소별 곱 (element-wise product) ➡️ 상호작용 반영
+    - $u_i^m \odot v_i^p$
+      - news-specific vector와 price-shared vector 의 원소별 곱 (element-wise product) ➡️ 상호작용 반영
+      - news: the primary carrier of sentiment
+      - price-shared information: gate for filtering out noise in the news ➡️ multiplication operation
     - $u_i^m||(u_i^m \odot v_i^p)||v_i^p$: 세 백터 연결
     - $W_{zr} \in \mathbb{R}^{2 \times 3d}$: 2차원 감성 출력을 위한 학습된 선형 변환 행렬
   - $h_i^{pmt} \in \mathbb{R}^2$: 해당 종목이 긍정적인 감성에 속할지, 부정적인 감성에 속할지를 확률 분포로 출력
     - ➡️ **뉴스 감성을 양극(positive vs negative)**으로 분류한 2차원 감성 프롬프트
 - aligns with the MPA(Movement Prompt Adaptation) strategy
   - enhances our model's generalization performance
-- a modal integration layer for $h_i^{hyb}\in \mathbb{R}^{d_h}$
-  - the stock representation
+- price-stream integration for $h_i^{hyb}\in \mathbb{R}^{d_h}$
+  - serves as the stock representation
   - ![alt text](image-19.png)
-  - 
+  - price and shared news information are equally crucial ➡️ addition operation
 ## Graph Dual-Attention Module
+- momentum spillover effects from related stocks
+- 
 ## Computational Complexity
 # Model Optimization
 ## Model Pretraining: MPA
