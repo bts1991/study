@@ -162,13 +162,13 @@
   - graph dual-attention module
     - dynamically infers a partial-bipartite stock attention network
     - considering the news- and price-induced interactions separately
-## Cross-Modal Fusion Module
+## A. Cross-Modal Fusion Module
 - cross-stream architecture
   - address the missing textual modality
     - 서로 다른 데이터 흐름(뉴스, 주가, 지표 등)을 나란히 처리하고 결합하는 구조
   - generate sentiment prompts for other stocks
   - integrate trimodal information including time series (trading signals), tabular features (technical indicators), and natural languages (textual news)
-### 1. Pseudo-News Padding and Activation State
+### 1) Pseudo-News Padding and Activation State
 - news may be absent for certain stocks on a given day
   - fill the news position with pseudo-news
   - differentiate pseudo-news from the real news
@@ -177,7 +177,7 @@
       - 𝑖 ∈ 𝑉⁽⁰⁾: stock 𝑖 contains price-only information
     - an activation subset 𝑉⁽¹⁾
       - 𝑖 ∈ 𝑉⁽¹⁾: the presence of real news
-### 2. Representation Learning
+### 2) Representation Learning
 - trimodal features ➡️ representations for each stock
 - textual news
   - pretrained language model BERT [55]를 이용, feature extractor
@@ -201,7 +201,7 @@
 - 최종 결과: two movement
   - news-induced movement: knowledge contained within mᵢ ∈ ℝᵈⁿ 
   - price-induced movement: knowledge contained within both pᵢ ∈ ℝᵈᵖ and qᵢ ∈ ℝᵈᵠ
-### 3. Modal Decomposition
+### 3) Modal Decomposition
 - news-related information + price-related information ➡️ trimodal representations
 - four different spaces
   - news-stream integration
@@ -236,7 +236,7 @@
   - ensure the independence of the decomposed modal-specific spaces from the modal-shared spaces ➡️ orthogonal constraint
   - 이 손실 함수는 위 가중치 행렬들을 서로로 내적한 행렬의 Frobenius Norm(전체 요소의 에너지)을 최소화 ➡️ 특화 표현과 공유 표현이 서로 겹치지 않도록 (즉, 직교하도록) 만듦 ➡️ 강제 분리: modal-shared feature와 modal-specific feature가 서로 다른 정보를 담도록
   - 없다면? shared vector와 specific vector가 같은 정보를 학습할 수 있음
-#### Modal Integration
+### 4) Modal Integration
 - modern behavioral finance theory [6], [57], [58]
   - investors are considered irrational and often swayed by opinions expressed in the media
   - Media sentiment: investors' expectations ➡️ stock price movements
@@ -257,13 +257,160 @@
   - serves as the stock representation
   - ![alt text](image-19.png)
   - price and shared news information are equally crucial ➡️ addition operation
-## Graph Dual-Attention Module
+## B. Graph Dual-Attention Module
 - momentum spillover effects from related stocks
-- 
-## Computational Complexity
+- imbalance of feature distribution
+  - circumvent direct aggregation
+  - uniformity of node representations 을 적용할 수 없기 때문(노드가 갖는 정보량이나 modality가 다르더라도 구분 없이 동일한 선형변환을 사용)
+- design a graph dual-attention module
+  - encode the exchanged heterogeneous information among stocks
+### 1) Stock Polarized Activation
+- asymmetry feature distribution ➡️ stocks with news (activated stocks) will carry more fundamental information beyond the market
+- different activation states ➡️ different stocks influence one another in different ways
+- embed activated and nonactivated stocks separately ➡️ distinguishing between real news and pseudo-news
+- ![alt text](image-20.png)
+  - activated nodes: prompts and hybrid embeddings
+  - nonactivated nodes: onl y hybrid embeddings
+- cosine distance to measure tbe polarization loss of them
+  - activated nodes with opposing sentiments: alienated
+  - those with the same sentiment: closer
+  - ![alt text](image-21.png)
+    - sign function: discerns whether nodes i and j share the same sentiment
+      - positive(+1) if nodes i and j share the same sentiment polarity ➡️ minimization of their distance cost
+      - negative(-1) if not
+      - $\hat{h_i^+}, \hat{h_i^-}$: 확률로 0과 1사이의 값을 가지며, 둘이 더하여 1이 됨
+      - $\hat{h_i^+}- \hat{h_i^-}$: 양수면 긍정이 우세, 음수면 부정이 우세
+      - $(\hat{h_i^+}- \hat{h_i^-})\cdot(\hat{h_j^+}- \hat{h_j^-})$
+        -  i와 j의 sentiment가 같은 방향으로 움직이면 결과가 양수, 다른 뱡향으로 움직이면 음수
+      - $sgn(x)$
+        - x > 0 이면 +1 반환
+        - x < 0 이면 -1 반환
+        - x = 0 이면  0 반환
+    - $cos(n_i, n_j)$
+       - 코사인 유사도는 두 벡터 사이의 방향 유사도를 측정
+       - $\cos(\mathbf{n}_i, \mathbf{n}_j) = \frac{\mathbf{n}_i \cdot \mathbf{n}_j}{\|\mathbf{n}_i\| \|\mathbf{n}_j\|}$
+         - 두 벡터의 내적값을 두 벡터의 노름으로 나눈값
+         - -1 에서 +1 사이의 값을 갖음
+         - +1은 매우 유사, 0은 무관, -1은 정반대
+     - $L_{pol}$
+       - minimization of polarization loss:
+         - opposite sentiments ➡️ separated
+         - similar sentiments ➡️ closer
+### 2) Interaction inference
+- Stocks often interact dynamically based on real-ti1ne market movements
+- a graph dual-attention mechanism
+  - capture the full complexity of these relationships
+  - reflecting the flow of information between nodes
+- onactivated stocks: restrict the information exchange 
+  - between activated and nonactivated stocks： activated ➡️ nonactivate(반대 방향은 없음)
+  - among nonactivated stocks themselves: 일부 노드끼리만 연결됨
+- partially bipartite GAN
+  - ![alt text](image-22.png)
+    - 감성 프롬프트를 가진 종목 𝑉(1)의 정보를 뉴스가 없는 종목 𝑉(0)에 전달하고자 하기 때문
+  - ![alt text](image-23.png)
+    - $i$: target node, $j$: source node
+    - $\alpha^{(1)}$: nonactivated node(i)가 actvated node(j) 로부터 받는 가중치
+    - $\alpha^{(0)}$: nonactvated node(i)가 nonactivated(j) 로부터 받는 가중치
+    - ![alt text](image-25.png)
+      - 노드 벡터 간의 상호작용 함수
+      - Graph Attention Mechanism (GAT)에서 자주 쓰이는 attention score 계산 함수
+      - estimates the message flux(전달량) for every node pair(연결된 노드) ➡️ more expressive in handling partial-bipartite graphs
+      - LeakyReLU: ReLU의 변형으로, 0 이하 입력도 완전히 죽이지 않음
+      - $a_{\phi}$: attention score 생성을 위한 weight vector
+      - $a_{\phi}^T\cdot ()$: 최종적으로 **attention score(스칼라)**를 생성하기 위한 선형 조합
+### 3) Information Exchange
+- every stock is influenced by both news- and price-driven movements
+- activated stock: breaking news often dominates price movements
+- nonactivated stock: interactions it receives from peer stocks can be aggregated into a message vector
+  - $\tilde{m}_i \in \R^{2d_e}$: 노드 𝑖는 뉴스 정보와 가격 정보가 유입되는 노드들로부터 두 종류의 정보를 받아 aggregate한 뒤 concatenate
+  - $$\tilde{\mathbf{m}}_i = \mathbin\Vert_{k \in \{0, 1\}} \sigma\left( \sum_{j \in \mathcal{V}^{(k)}(i)} \alpha_{i,j}^{(k)} \mathbf{e}_{i,j} \right)$$
+    - $\tilde{m}_i$: **노드 i**에 대해 이웃 노드들로부터 받은 메시지를 집계한 최종 message vector
+    - $\alpha_{i,j}^{(k)}$: 노드 𝑗 → 노드 𝑖 로의 attention weight (normalized importance)
+      - governing the strength of the strength of the connection
+    - $\mathbf{e}_{i,j}$: 노드 𝑗 → 노드 𝑖로 전달되는 메시지 (edge representation)
+      - $$\mathbf{e}_{i,j} = \mathbf{W}_{eo} \left[ \mathbf{n}_i \mathbin\Vert \sigma \left( \mathbf{W}_{on} \left[ \mathbf{n}_i \mathbin\Vert \mathbf{n}_j \right] \right) \mathbin\Vert \mathbf{n}_j \right]$$
+        - 두 노드의 임베딩을 기반으로 노드 간 상호작용 메시지를 생성(encapsulates the information flow)
+          - 단순한 임베딩이 아니라, 두 노드 사이의 상호작용을 내포한 stock-to-stock 메시지 표현(encodes the stock-to-stock interaction into a stock-sensitive representation)
+        - $\mathbf{W}_{on} \in \R^{d\times 2d}$: 첫 번째 변환 weight (MLP)
+        - $\mathbf{W}_{eo} \in \R^{d\times 3d}$: 최종 메시지 생성용 weight
+    -  $\mathbf{e}_{i,j}$는 attention score인 $\alpha_{i,j}^{(k)}$로 가중합되어 노드 i 로 전달됨
+### 4) Output Mapping
+- nonactivated stocks
+  - $\hat{y_i} \in \R^2$
+    - = $[\hat{y_i^-}||\hat{y_i^+}]=softmax(W_i[n_i||\tilde{m_i}]+b_i)$
+      - $W_i\in \R^{2\times (d_n+2d_e)}$, $b_i\in \R^2$
+- activated stock
+  - predicted price movement: the extracted sentiment prompts $h_i^{pmt}=[\hat{h_i^-}||\hat{h_i^+}]$
+### 5) Discussion
+- conventional graph attention mechanism: homogeneous graphs
+- graph dual-attention module: partially bipartite
+  - Ablation experiments: removing the message vectors ➡️ degrades model performance
+  - crucial to differenciate two types of attention scores($\alpha_{i,j}^{(0)}$, $\alpha_{i,j}^{(1)}$)
+  - increase computational complexity
+## C. Computational Complexity
+- Part1: The cross-modal fusion module
+  - primary cost: recurrent component of the LSTM
+    - a complexity of $O(N\times T\times d_p^2)$
+      - $N$: the number of stocks
+      - $T$: the length of the time series
+      - $d_p$: the hidden size of LSTM
+  - negligible cost: linear layers
+    - modal decomposition, modal integration
+- Part2: The graph dual-atten tion module
+  - primary cost: interactions inference
+    - computing the unidirectional interactions between all pairs of nodes
+    - a complexity of $O(N^2\times d_n)$
+      - $d_n$: the dimension of the node vector
+  - negligible cost: linear layers
+- Overall complexity
+  - $O(N\times T\times d_p^2) + O(N^2\times d_n)$
+  - Thus, need to control the scale of the stock network
+    - excessive node interactions can lead to increased computational costs
 # Model Optimization
-## Model Pretraining: MPA
-## Model Fine-Tuning
+- two-stage optimization method
+- A. MPA
+  - data augmentation strategy for extensive pretraining
+  - EQSamp: capturing news information by the graph dual-attention module
+- B. Fine-Tuning
+  - using real news data
+## A. Model Pretraining: MPA
+- stocks with daily news coverage are rare
+  - long tail effect in feature distribution
+  - easily distracted by the abundance of price features
+### 1) Equivalence Resampling
+- The market conditions reflected in historical data may not necessarily correspond to future market states
+- propose the EQSamp strategy
+  - augmenting data in stock market datasets ➡️ adapt to the long-tail effects of features ➡️ accommodate a wide range of possible scenarios
+  - establisbes an equivalence between market sentiments in news and stock movements
+  - generate prompts directly via EQSrunp
+- Process
+  - begin by randomly activating a stock subset $V^{(1)}\subset V$
+    - set size is dynamically adjusted ➡️ emulate daily changes in the number of stocks that carry news
+  - the quantity-varying process of stocks with news
+    - counting their number within a unit of time
+    - using a Poisson process
+      - ![alt text](image-26.png)
+      - 단위 시간 또는 단위 공간 내에서 어떤 사건이 몇 번 발생하는지를 모델링
+      - k: 사건 발생 횟수
+        - 하루에 뉴스가 있는 종목 수
+      - 𝜆: 단위 시간/공간에서 평균 발생 횟수
+        - maximum likelihood estimation로 결정
+  - assign them movement prompts based on their ground-truth movements(각 주식의 실제 등락 정보)
+    - equivalent surrogate(대체물) for news sentiments
+    - ![alt text](image-27.png)
+    - $\epsilon_i$: follows a uniform distribution $U(0, 0.5)$
+      - 프롬프트에 **무작위 신뢰도 요소(random confidence)**를 추가하여 **강건성(robustness)**을 확보
+  - prevent the model from over-fitting due to over-reliance on activated nodes
+    - a strategy of inverting movement prompts(실제 등락 정보로 생성된 이진 벡터터) with a mutation probability $\theta$(일정 확률로 반전)
+    - $h_i^{pmt}$ ⬅️ $1-h_i^{pmt}$: 1은 0이 되고, 0은 1이 됨
+    - 일종의 "데이터 노이즈 주입(data noise injection)" 전략
+    - 과적합을 방지하고 일반화 성능을 향상
+- worth noting 
+  - perform multiple samplings to obtain numerous different activable subsets for a single day to augment the pretraining data
+
+
+### 2) Pretraining Objectives
+## B. Model Fine-Tuning
 # Experiments
 ## Evaluation Setup
 ## Stock Movement Prediction
