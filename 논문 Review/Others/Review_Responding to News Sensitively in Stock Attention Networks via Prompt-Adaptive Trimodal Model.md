@@ -381,42 +381,203 @@
 - The market conditions reflected in historical data may not necessarily correspond to future market states
 - propose the EQSamp strategy
   - augmenting data in stock market datasets ➡️ adapt to the long-tail effects of features ➡️ accommodate a wide range of possible scenarios
-  - establisbes an equivalence between market sentiments in news and stock movements
-  - generate prompts directly via EQSrunp
+  - establisbes an equivalence between market sentiments in news and stock movements(주가의 움직임으로부터 시장 감성과 같은 의미를 갖는 무언가를 추출)
+  - generate prompts directly via EQSamp
 - Process
-  - begin by randomly activating a stock subset $V^{(1)}\subset V$
-    - set size is dynamically adjusted ➡️ emulate daily changes in the number of stocks that carry news
-  - the quantity-varying process of stocks with news
-    - counting their number within a unit of time
-    - using a Poisson process
-      - ![alt text](image-26.png)
-      - 단위 시간 또는 단위 공간 내에서 어떤 사건이 몇 번 발생하는지를 모델링
-      - k: 사건 발생 횟수
-        - 하루에 뉴스가 있는 종목 수
-      - 𝜆: 단위 시간/공간에서 평균 발생 횟수
-        - maximum likelihood estimation로 결정
-  - assign them movement prompts based on their ground-truth movements(각 주식의 실제 등락 정보)
+  - 1) randomly activating a stock subset $V^{(1)}\subset V$
+    - 일부를 무작위로 활성화된 주식 하위 집합으로 선택
+    - set size is dynamically adjusted 
+      - ➡️ emulate daily changes in the number of stocks that carry news
+      - 어떻게? the quantity-varying process of stocks with news
+        - counting within a unit of time
+        - approximate with a Poisson distribution
+          - ![alt text](image-26.png)
+          - 단위 시간 또는 단위 공간 내에서 어떤 사건이 몇 번 발생하는지를 모델링
+          - k: 사건 발생 횟수
+            - 하루에 뉴스가 있는 종목 수
+          - 𝜆: 단위 시간/공간에서 평균 발생 횟수
+            - maximum likelihood estimation로 결정
+  - 2) assign those stocks movement prompts based on their ground-truth movements(각 주식의 실제 등락 정보)
     - equivalent surrogate(대체물) for news sentiments
     - ![alt text](image-27.png)
     - $\epsilon_i$: follows a uniform distribution $U(0, 0.5)$
+      - 0에서 0.5 사이의 모든 실수 값을 동일한 확률로 선택
       - 프롬프트에 **무작위 신뢰도 요소(random confidence)**를 추가하여 **강건성(robustness)**을 확보
-  - prevent the model from over-fitting due to over-reliance on activated nodes
-    - a strategy of inverting movement prompts(실제 등락 정보로 생성된 이진 벡터터) with a mutation probability $\theta$(일정 확률로 반전)
+    - 결과적으로, 실제 주식 가격이 하락했을 때는 [0.7||0.3]과 같이 하락의 sentiment를 생성
+  - 3) a strategy of inverting movement prompts(실제 등락 정보로 생성된 이진 벡터) with a mutation probability $\theta$(일정 확률로 반전)
+    - prevent the model from over-fitting due to over-reliance on activated nodes
     - $h_i^{pmt}$ ⬅️ $1-h_i^{pmt}$: 1은 0이 되고, 0은 1이 됨
+    - some sentiments may be misidentified
+      - 현실에서는 예측한 감성이 잘 못 추론되었을 수도 있으니까...  
     - 일종의 "데이터 노이즈 주입(data noise injection)" 전략
     - 과적합을 방지하고 일반화 성능을 향상
 - worth noting 
   - perform multiple samplings to obtain numerous different activable subsets for a single day to augment the pretraining data
-
+  - 학습 데이터 양이 증가, 특정 종목이나 특정 패턴에 과적합되지 않음
 
 ### 2) Pretraining Objectives
+- substantial movement prompts that are part of the input
+  - ➡️ avoid insufficient attention to activated stocks
+  - 현실에서는 뉴스 정보를 가지고 있는 주식이 훨씬 적음
+- all input news = pseudo-news
+  - news sentiment prompts are replaced by the generated movement prompts
+  - 실제 뉴스가 아니라 모델이 생성한 것이기 때문
+- the movement loss can be measured solely by the predicted movements of nonactivated stocks
+  - 진짜 뉴스 없이도 학습하기 위한 전략
+  - ![alt text](image-28.png)
+  - $y_i^t$: ground-truth movement of stock i $\in V^{(0)}$
+    - 0 또는 1
+  - $\tilde{y}_i^-$, $\tilde{y}_i^+$: 모델이 예측한 하락/상승 값
+  - Binary Cross Entropy: 하락, 상승에 따라 해당 log 항만 남게 되기 대문에 예측 확률($\tilde{y}_i^-$, $\tilde{y}_i^+$)이 클수록 손실 함수가 작아짐
+- the pretraining objective
+  - all loss terms with different weights
+  - ![alt text](image-29.png)
+  - 시간 축 전체에 대한 누적합을 산출
+
 ## B. Model Fine-Tuning
+- pretraning: focus on graph dual-attention module
+  - the optimization of the ability of the cross-modal fusion module은 누락됨
+- fine-tuning: leverage all available real news data ➡️ refine the cross-modal fusion module(크로스모달 융합 모듈을 학습)
+- Sentiment prompts = the movements
+  - 감정 프롬프트와 주가 움직임이 동일하다고 간주(Positive 감정 = 주가 rise)
+- ![alt text](image-31.png)
+  - news가 있는 주식에 대해서만 계산
+  - Binary Cross Entropy (BCE) 형태의 손실 함수
+  - 실제로 주식이 상승(하락)했을 때, 상승(하락)한다고 예측한 긍정(부정) 비율만 남겨, 예측값이 클수록(잘 예측할수록) 손실함수가 작아지도록 함
+- the fine-tuning objective
+  - ![alt text](image-32.png)
+  - seamless and nondivergent transition between the two steps
+    - consistency between the pretraining and fine-tuning stages
 # Experiments
-## Evaluation Setup
-## Stock Movement Prediction
-## Ablation Study
-## Backtesting Profitability
-## Stress Test During Market Crash
-## Parameter Sensitivity Analysis
-## Case Study on Exploring Stock Attention Networks
+## A. Evaluation Setup
+### 1) Datasets
+- historical trading data
+  - NASDAQ 100 ➡️ 118 stocks, S&P 500 ➡️ 510 stocks
+  - (DJIA stocks are generally included in the NASDAQ 100 and S&P 500 indices)
+  - period: 2014.01 ~ 2019.12
+  - source: Yahoo Finance, Nasdaq Data Link
+  - trading information: highest price, lowest price, opening price, closing price, and trade volume
+  - standardize the price data for each stock
+- technical indicators
+  - using TA-lib
+  - Moving Average Indicators, Momentum Indicators, Volatility Indicators, Volume Indicators
+- collected news headlines
+  - period: 2016.01 ~ 2019.12
+  - source: Benzinga
+    - labeled the relevant stocks impacted by each news item.
+  - total: 10,536 news articles
+  - directly associated stocks: 11 out of 118 stocks, 26 out of 510 stocks
+- ![alt text](image-33.png)
+### 2) Compared Baselines
+- thorough comparative analysis against nine state-of-the-art baselines
+  - Sequential models
+    - LSTM [37], Transformer [39], frequency interpolation time series analysis basetine (FITS) [60], and Pathformer [61]
+    - make predictions solely based on historical timeseries data
+  - Graph-based methods
+    - ESTIMATE [2], temporal graph convolution (TGC) [23], subsequence based graph routing network (S-GRN) [46], and SAMBA [49]
+    - leverage trading signals and GNN variants for prediction
+    - (개별 추가 설명)
+      - ESTIMATE: integrates temporal generative filters and wavelet hypergraph attention to capture stock behaviors and correlations
+      - TGC: jointly models the temporal evolution and relation network of the stock relationships for relational stock ranking
+      - S-GRN: extends GNNs with multiple messaging parameter sets and selects the optimal one to construct the most effective stock network
+      - SAMBA: integrates the Mamba architecture and GNNs to achieve near-linear computational complexity.
+  - Multimodal methods
+    - bimodal(time series and news)
+      - PEN [40], STHAN-SR [14], AD-GAT [15], DANSMP [6]
+    - trimodal(time series, news, and technical indicators)
+      - MCASP [62], and MSMF [54]
+### 3) Evaluation Metrics
+- accuracy (ACC)
+  - the ratio of correctly predicted labels (both positive and negative) to the total number of predictions
+  - ![alt text](image-34.png)
+- Mathew's correlation coefficient (MCC)
+  - handle imbalanced datasets
+    - ~1에서 +1 사이의 값을 가짐
+    - +1에 가까울수록 비슷하다고 봄, 0에 가까울수록 무작위 추축과 유사하다고 봄
+    - Positive와 Negative를 골고루 잘 예측하는지를 평가
+  - ![alt text](image-36.png)
+- assess backtesting profitability ⬅️ a simulated trading portfolio  
+  - two metrics: annualized return rate (ARR) and annualized sharpe ratio (ASR)
+  - ARR: the cumulative performance of a trading strategy over time
+    - summing up the daily returns ➡️ the percentage change in the portfolio's value from one day to the next
+    - ![alt text](image-37.png)
+      - E: the final value of the portfolio at the end of the investment period (including both the principal and returns)
+      - P: the initial investment (the starting principal)
+  - ASR: returns against volatility, quantifying the risk adj usted profitability
+    - ![alt text](image-38.png)
+    - $\sigma_p$: annualized standard deviation of the portfol io, serving as a measure of volatility
+    - $R_f$: average return rate of a risk-free asset
+### 4) Implementation Details
+- Divide datasets
+  - pretraning: 2014.01 ~ 2015.12
+    - EQSamp: resample the same day 50 times
+      - 50 different activation subsets with different prompts for each day
+  - fine-tuning and evaluation: 2016.01 ~ 2019.12
+- rolling window approach
+  - evaluate the average performance of 12 test months in 2019
+- grid search ➡️ optimal hyper parameters
+- Glorot initialization ➡️ initialize learnable parameters
+  - Xavier Initialization 와 동일
+  - 학습 초기에 가중치를 적절한 크기로 랜덤 초기화
+- AdamW optimizer
+  - Adam(Adaptive Moment Estimation) + Weight Decay(정규화) 를 결합
+  - 일반 Adam은 weight decay를 잘못 적용하는 문제가 있었는데, AdamW는 weight decay를 별도로 분리해서 정확히 적용
+- a maximum of 200 epochs
+- 전체 학습 데이터셋을 최대 200번 반복해서 학습
+- 학습 소요 시간(including pretraining and fine-tuning)
+  - NASDAQ 100 datasets: 4.7 hrs
+  - S&P 500 datasets: 7.9 hrs
+- 예측 소요 시간(each test day)
+  - NASDAQ 100 datasets: 0.11 sec
+  - S&P 500 datasets: 0.32 sec
+- 장비: NVIDIA Titan V GPU 1개
+### 5) Trading Portfolios
+- holding 20 stocks
+  - purchasing a maximum of 10 of the highest-ranked stocks from the top 20(not already present in the portfolio)
+  - an equivalent quantity of the lowestranked stocks was sold off
+  - controll the turnover rate
+    - 너무 자주 사고팔지 않도록 거래량을 통제
+- initial account capital of U.S. $5 million
+  - transaction costs: buying 0.05%, selling 0.15%
+## B. Stock Movement Prediction
+- results of stock movement prediction(ACC, MCC)
+  - PA-TMM: smaller advantage to baselines
+- results of the Diebold-Mariano test(ACC, MCC)
+  - PA-TMM: outperforms state-of-the-art baselines
+  - 일부 모델과의 성능 차이가 미묘해서, 단순 수치 비교만으로는 불충분할 때 통계적 유의미성을 확인하기 위해 DM 검정을 사용
+- 시사점
+  - effectiveness of adapting the model to the long tail effect in feature distribution
+  - accttrate predictions by enhancing the attention mechanism's sensitivity to news
+    - EQSamp ➡️ prompting the news sentiments to the entire stock pool ➡️ data augmentation
+- Analysis
+  - Sequential models including LSTM, Transformer, FITS, and Pathformer
+    - overlooking intricate interdependencies in the stock network
+    - exhibit inferior perfomance compared to graph-based methods
+  - ESTIMATE, TGC, S-GRN, and SAMBA
+    - account for stock connections, outperform time-series models
+    - limited consideration of external media information
+    - constrained by efficient capital markets [66]
+    - unavoidable influx of unnecessary noise
+      - 관련성 없는 이웃 주식 노드의 정보까지 모델에 반영
+      - S&P 500은 종목수가 많기 때문에 이웃 노드 수가 많아 불필요한 정보가 혼합될 수 있음
+  - PEN, STHAN-SR, AD-OAT, and DANSMP
+    - identifying and utilizing multimedia news
+    - demonstrate superior performance compared to nonnews methods
+    - the disproportionate increase(불균형적 증가)
+      -  the average number of nodes with news < the overall node count
+      - ➡️ varying degrees of decline in ACC performance in S&P 500 datasets
+  - MCASP and MSMF
+    - implementing trimodal feature fusion
+    - better performance on the S&P 500 dataset
+    - overlook the long-tailed feature distribution
+      - overemphasize price features and consequently underutilize the news information
+  - PA-TMM
+    - optimal prediction performance in terms of both ACC and MCC
+    - MPA pretraining ➡️ adapt to sparse news ➡️ enable activated nodes to receive timely attention ➡️ overcome the long tail effect inherent in stock feature distribution
+
+## C. Ablation Study
+## D. Backtesting Profitability
+## E. Stress Test During Market Crash
+## F. Parameter Sensitivity Analysis
+## G. Case Study on Exploring Stock Attention Networks
 # Conclusion
