@@ -42,7 +42,9 @@
 - two main challenges
   - 1. the long tail effect in feature distribution(feature imbalanced problem)
     - bias toward the dominated head features
-  - 2. resampling is not effective to overcome feature unbalance
+  - 2. data scarcity problem
+    - leading to the poor generalization
+    - resampling is not effective to overcome feature unbalance(replicate of the dataset)
     - why? future market landscapes are diverse and intricate
 - turning point
   - events that affect specific stocks ➡️ an instantaneous dominance over their movements
@@ -625,7 +627,53 @@
   - numerous stock choices ➡️ the increased complexity of risk management ➡️ the noticeable decline in the accuracy of price movement prediction
 - news-based multimodal methods demonstrate higher ASR scores
   - a notable enhancement in the model's resilience to risks
+- without the constraint of predefined relationships ➡️ more effective in harnessing news sentiments ➡️ heightened profitability when accounting for the inherent risks involved 
 ## E. Stress Test During Market Crash
+- the robustness of our model against extreme market conditions
+  - market crash: 2018.10 ~ 2018.12
+- demonstrates a level of resilience in extreme market conditions
+  - struggled to navigate the market's panic sentiment
+  - However, as it progressively acclimated to the market conditions
 ## F. Parameter Sensitivity Analysis
+- assess the influence of different hyper parameter configurations on model performance
+  - Overall, our model is generally stable around the optirmal setting
+### 1) Window Sizes T (N 12, S 16)
+- variation with different window sizes
+- reducing T ➡️ overlook long-tenn trends ➡️ steep decrease in the ACC score
+- increasing T ➡️ introducing stale information from past days ➡️ deteriorate performance
+### 2) Mutation Probability $\theta$ (N 0.25, S 0.25)
+- the ACC score of varying $\theta$
+- huge $\theta$ ➡️ mistrust the provided movement prompts ➡️ not fully leveraging sentiments within the news to a certain extent
+### 3) Dimensions of $d_n$(N 256, S 384) and $d_e$(N 256, S 320)
+- excessively low or high dimensionality ➡️ under-fitting or over-fitting ➡️ worsens the ACC score
 ## G. Case Study on Exploring Stock Attention Networks
+- On April 12, 2019, investigate the effectiveness of MPA with S&P500 dataset
+- News
+  - two major U.S. banks, JPMorgan Chase (JPM) and Wells Fargo (WFC), shared their first-quarter results and the market reacted positively
+  - a positive tone for earnings overall
+  - intense bullish sentiment in the stock network
+- whether MPA resolves the biased attention issue
+  - absence of MPA
+    - the attention is primarily distributed within each independent sector
+    - other stocks hardly pay attention to their strong bullish sentiments
+    - ineffective information exchange of news in the stock network
+  - pretraining with MPA
+    - significant increase in cross-sector attention
+    - the noticeable rise in the number of target nodes effectively influenced by JPM and WFC
+- PA-TMM's capability
+  - data augmentation via EQSamp + the utilization of pola1ized activation ➡️ respond sensitively to news ➡️ enhancing performance for stock movement prediction
 # Conclusion
+- PA-TMM
+  - a novel model for stock movement prediction and quantitative trading
+  - addresses the long-tail distribution problem
+  - a pretraining strategy called MPA + EQSamp for data augmentation ➡️ enhance sensitivity to news
+  - leveraging news sentiment as prompts ➡️ captures cross-modal signals more effectively
+- Experimental results
+  - superior prediction performance in terms of ACC and MCC
+  - Various studies: validate its effectiveness, profitability, and robustness
+- Future work
+  - explore lightweight attention mechanisms
+    - address computational challenges due to its dual-attention architecture
+  - news + other textual sources
+    - financial reports, social media, geopolitical events, and regulations
+    - may enhance multimodal fusion and prediction accuracy
