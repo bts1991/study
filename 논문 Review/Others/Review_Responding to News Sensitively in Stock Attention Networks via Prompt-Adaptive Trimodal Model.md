@@ -75,7 +75,7 @@
     - respond to tai led news sensitively
     - prevents it from overfitting due to over-reliance on stocks canying news
   - EQSarnp strategy
-    - financial data augmentati on when pretraining to overcome the news scarcity problem
+    - financial data augmentation when pretraining to overcome the news scarcity problem
     - enhancing tl1e generalization ability of GNNs on feature-imbalanced datasets
 # Related Work
 ## Time-Series Stock Prediction
@@ -576,7 +576,55 @@
     - MPA pretraining ➡️ adapt to sparse news ➡️ enable activated nodes to receive timely attention ➡️ overcome the long tail effect inherent in stock feature distribution
 
 ## C. Ablation Study
+### 1) Effectiveness of the Model Architecture
+- four variants of PA-TMM
+  - w/o Pmts
+    - assess the effectiveness of incorporating fi nancial news
+    - removes all sentiment prompts $h_i^{pmt}$ , and only uses the hybrid embeddings for agregating stock interactions
+  - w/o Msgs
+    - assess the effectiveness of the graph dual-attention module
+    - removes all message vectors $\tilde{m}_i$ in output mapping
+  - w/o $L_{ort}$
+    - assess the effectiveness of modal decomposition
+    - removes the orthogonal loss term in the objective
+  - w/o $L_{pol}$
+    - assess the effectiveness of stock polarized activation
+    - removes the polarizatio loss term in the objective
+- all components are conclusively important
+  - sentiment prompts (w/o Pmts) and graph aggregation mechanism (w/o Msgs)
+    - particularly pivotal role in dealing with the long tail effect in feature distribution
+    - ensure the feasibility of implementing MPA 
+  - modal decomposition (w/o $L_{pol}$) and polarized activation (w/o $L_{ort}$)
+    - enhancing the efficiency of utilizing news
+    - complement each other ➡️ enhancing the quality of representations learned at different stages
+### 2) Effectiveness of MPA
+- three variants of PA-TMM
+  - w/o MPA
+    - directly optimizes the model without MPA pretraining strategy
+  - w/o MPA-P
+    - pretrains the model but the number of the activated stocks is kept constant
+    - based on the average number of stocks with daily news
+    - ➡️ 
+    - not using a Poisson process;
+  - w/o MPA-M
+    - pretrains the model but does not apply the mutation strategy
+- a significant impact
+  - implementation of MPA
+    - responsive to activated nodes ➡️ promptly capture news without over-fitting (w/o MPA)
+  - dynamic adjustment of the number of activated nodes 
+    - preadapt to the real-world pattern(w/o MPA-P)
+  - mutation strategy
+    - prevent the model from over-reliance on activated nodes (w/o MPA-M)
 ## D. Backtesting Profitability
+- simulate real-world investment
+- highest ARR score: exceptional profitability
+- highest ASR score: outstanding performance on risk mitigation
+- combining the backtesting results with the stock movement prediction performance
+  - the more precise, the greater its potential for earning
+- lower performance of ARR and ASR on the S&P 500 dataset compared to the NASDAQ 100 dataset
+  - numerous stock choices ➡️ the increased complexity of risk management ➡️ the noticeable decline in the accuracy of price movement prediction
+- news-based multimodal methods demonstrate higher ASR scores
+  - a notable enhancement in the model's resilience to risks
 ## E. Stress Test During Market Crash
 ## F. Parameter Sensitivity Analysis
 ## G. Case Study on Exploring Stock Attention Networks
