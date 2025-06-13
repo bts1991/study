@@ -64,6 +64,10 @@
     - graph dual-attention module: dynamically inferring the stock attention network by a graph dual-attention mechanism
       - circumvents(우회) direct similarity measurement of heterogeneous(서로 다른) representations(news, prices)
       - overcome biased attention
+      - (What is Graph Dual-Attention?)
+        - Node-level Attention 뿐만 아니라, Feature-level Attention을 같이 적용
+        - 즉, 노드 간의 중요성과 특선 간의 중요성을 같이 고려
+        - 즉, **"누구로부터 어떤 정보를 얼마나 받아들일 것인가"**를 이중으로 판단하는 구조
   - an equivalence resampling (EQSamp) strategy
     - tackle the tail feature scarcity problem
     - data augmentation by establislng a direct connection between market sentiments in news and stock movements by considering the dominant impact of news
@@ -72,18 +76,20 @@
   - fine-tune the model with real-world data
     - mainly focusing on understanding news representations
 - contributions
-  - a learning framework named PA-TMM: effectively captupes news propagation dynamics by graph learning
+  - a learning framework named PA-TMM
+    - heterogeneous modality fosion
+    - effectively captupes news propagation dynamics by graph learning
   - targeted pretraining method named movement prompt adaptation (MPA)
-    - respond to tai led news sensitively
-    - prevents it from overfitting due to over-reliance on stocks canying news
+    - respond to tailed news sensitively
+    - prevents it from overfitting due to over-reliance on stocks carrying news
   - EQSarnp strategy
     - financial data augmentation when pretraining to overcome the news scarcity problem
-    - enhancing tl1e generalization ability of GNNs on feature-imbalanced datasets
+    - enhancing the generalization ability of GNNs on feature-imbalanced datasets
 # Related Work
 ## Time-Series Stock Prediction
-- encoding an individual stock ➡️ a sequential latent representation ➡️ downstream tasks
+- encoding an individual stock ➡️ a sequential latent representation
   - RNNs based: LSTM, GRU, Transformer
-  - capture the underlying tune-varying patterns from multiple time steps
+  - capture the underlying time-varying patterns from multiple time steps
 - encode the time series for each stock using RNNs
   - PEN [40], MAN-SF [12], and MTR-C [41]
 - mningling different types of market factors
@@ -102,42 +108,45 @@
   - To model this intraindustry phenomenon
   - node: each entity
   - edges: relations
-    - industry category [2], supply chain [23], business partnership [6], price correlation [3], lead-lag correlation [2], and causal effect [21]
+    - e.g., industry category [2], supply chain [23], business partnership [6], price correlation [3], lead-lag correlation [2], and causal effect [21]
 - GNNs
-  - THGNN [3] generates a temporal and heterogeneous graph for graph aggregation operation. ESTIMATE [2], utilizin g hypergraphs based on industry classifications, captures nonpairwise correlations among stocks. SAMBA [49] models dependencies between daily stock features by utilizing a bidirectional Mamba block and an adaptive graph convolution module
+  - THGNN [3]: generates a temporal and heterogeneous graph for graph aggregation operation.
+  - ESTIMATE [2]: utilizing hypergraphs based on industry classifications, captures nonpairwise correlations among stocks
+  - SAMBA [49]: models dependencies between daily stock features by utilizing a bidirectional Mamba block and an adaptive graph convolution module
   - THGNN [3]: 하이퍼그래프를 통해 시간 및 관계 기반 특성을 통합
   - ESTIMATE [2]: 하이퍼그래프 및 웨이블릿 attention을 통해 주식 간 상관관계 포착
   - SAMBA [49]: 양방향 Mamba 블록 및 적응형 그래프 합성 모듈을 활용
-- aggregating peer influences ➡️ update node representations to capture neighbor-induced movement
+- 효과성 of graph-based method
+  - aggregating peer influences ➡️ update node representations to capture neighbor-induced movement
 ## News-Based Stock Prediction
-- financial news [40], [50], [51] or social media posts [7], [20]
-  - external information beyond the trading market
-- the graph convolutional networks (GCNs)
-  - multi-source aggregated classification (MAC) [l]
-  - aggregate the effects of news on related companies
-- aggregate various features such as technical indicators and textual news
-  - NumHTML [52] and multi-view fusion network (MFN) [53]
-- adapt to the market dynamics: combining stock interactions and news information
-    - using time series of prices, market sentiments from news, etc
-      - AD-GAT(Graph Attention Technic) [15] and DANSMP [6]
-    - balances complementarity and redundancy across modalities
-      - Multi-scale multi-modal fusion (MSMF) [54]: integrating the modality completion encoder, multiscale feature extractor, and fusion mechanism.
+- the advancement of multunedia technology ➡️ integrating external information beyond the trading market
+  - financial news [40], [50], [51] or social media posts [7], [20] 
+- 시도1: the graph convolutional networks (GCNs)
+  - multi-source aggregated classification (MAC) [l]: aggregate the effects of news on related companies
+  - NumHTML [52] and multi-view fusion network (MFN) [53]: aggregate various features such as technical indicators and textual news
+- 시도2: GAT
+  - 목적: adapt to the market dynamics ⬅️ combining stock interactions and news information
+  - AD-GAT(Graph Attention Technic) [15] and DANSMP [6]: using time series of prices, market sentiments from news, etc ➡️ adjust or infer the edges
+- 시도3: Multi-modal
+  - Multi-scale multi-modal fusion (MSMF) [54]: integrating the modality completion encoder, multiscale feature extractor, and fusion mechanism ➡️ balances complementarity and redundancy across modalities
+  - evolving from a unimodal to a multimodal paradigm
 - But, 여전한 문제
   - lack of consideration for the long-tail effect
   - silmply concatenate features from different modalities
   - difficult to fully and effectively leverage news information and model the propagation of news impact within stock networks
 - 해결 방안
   - propose a pretraining strategy for GATs in finance
-  - enables the model to proactively adapt to the imbalanced feature distribution
-  - enhancing the generalizability
+    - enables the model to proactively adapt to the imbalanced feature distribution
+    - enhancing the generalizability
 # Problem Statement
-- a classification method optimized through an objective function for classification
-   -  predicting the exact value of stock prices is far more challenging than predicting price movements
-   - outputting a class label that indicates the rise or fall of stocks
-   - comparing whether the stock price on the current trading day is higher than that of the previous trading day
-   - leverage trimodal features on the (t−1)th day as input features to predict the movements (labels)
-   - ![alt text](image.png)
+- a classification method for optimizatoin
+  - In the stock market, predicting the exact value of stock prices is far more challenging than predicting price movements
+  - an objective function
+    - ![alt text](image.png)
+    - outputting a class label that indicates the rise or fall of stocks
+    - comparing whether the stock price on the current trading day is higher than that of the previous trading day 
 - three feature modalities
+  - leverage trimodal features on the (T−1)th day as input features to predict the movements on the the Tth day 
   - 1. textual news corpora T
     - labeled the relevant stocks impacted by each news item
   - 2. historical time-series trading signals
@@ -145,14 +154,16 @@
     - ![alt text](image-4.png)
       - transaction features of stock i on the Tth day
       - the highest and lowest price, opening and closing price, trade volume, and rankings of these values over 5 days, 20 days, and 60 days
+    - standardize the price values of each stock ➡️ address varying price levels
   - 3. tabular(테이블 형식) technical indicators
     - ![alt text](image-3.png)
+    - computed through the technical analysis of historical trading signals
     - Moving Average Indicators: smooth price signals over time to identify trends and patterns inherent in price movement
     - Momentum Indicators: evaluate the strength and speed of price changes and detect potential trend reversals or continuations
     - Volatility Indicators: quantify the price volatility and gauge the level of risk in the market
     - Volume Indicators: assess the relationship between price and tracting volume and identify the accumulation or distribution of a security
 - 목표
-  - integrate trunodal features + acco,runodate the long-tailed feature distribution
+  - integrate trimodal features + accomodate the long-tailed feature distribution(only a few stocks have relevant news)
 
 # PA-TMM Architecture
 - key motivation: dealing with the long tail effect in feature distribution
@@ -172,7 +183,7 @@
   - integrate trimodal information including time series (trading signals), tabular features (technical indicators), and natural languages (textual news)
 ### 1) Pseudo-News Padding and Activation State
 - news may be absent for certain stocks on a given day
-  - fill the news position with pseudo-news
+  - fill the news position with pseudo-news(i.e., a space character) ➡️ address the issue of modality incompleteness with flexibility
   - differentiate pseudo-news from the real news
     - mutually exclusive subsets on the day 𝑡
     - a nonactivation subset 𝑉⁽⁰⁾
@@ -182,29 +193,36 @@
 ### 2) Representation Learning
 - trimodal features ➡️ representations for each stock
 - textual news
-  - pretrained language model BERT [55]를 이용, feature extractor
   - encode the lth textual sequence into a vector
     - ![alt text](image-5.png)
+  - feature extractor: pretrained language model BERT [55]
+    - ![alt text](image-39.png)
   - news representation: the average of all these embeddings belonging to the same stock
     - ![alt text](image-6.png)
     - L: the number of stock-specific news on the target trading day
+  - news-induced movement
+    - ![alt text](image-40.png)
 - time-series trading signals
   - the bidirectional LSTM (Bi-LSTM)
     - encode the time-series trading signals into a vector
     - ![alt text](image-7.png)
-    - capture the trading context of each stock
-  - concatenating historical trading signals
-    - ![alt text](image-9.png)
+  - capture the trading context of each stock
+    - ![alt text](image-42.png)
+    - $i \in V$
+    - $X_i^{[t-T:t]}=[X_i^{t-T},...,X_i^{t-1}]$: matrix concatenating historical trading signals
 - technical indicators
   - TabNet encoder
     - ![alt text](image-10.png)
     - the tabular features ➡️ a continuous vector space
   - ![alt text](image-11.png)
 - 최종 결과: two movement
-  - news-induced movement: knowledge contained within mᵢ ∈ ℝᵈⁿ 
-  - price-induced movement: knowledge contained within both pᵢ ∈ ℝᵈᵖ and qᵢ ∈ ℝᵈᵠ
+  - news-induced movement: $m_i\in \R^{d_m}$
+  - price-induced movement
+    - time-series trading context: $p_i\in \R^{d_p}$
+    - tabular feature matrix: $q_i\in \R^{d_q}$
 ### 3) Modal Decomposition
-- news-related information + price-related information ➡️ trimodal representations
+- Fuse trimodal representations
+  - news-related information + price-related information ➡️ project into four different spaces
 - four different spaces
   - news-stream integration
     - 1) modal-specific feature extraction
@@ -235,9 +253,9 @@
   - $W_{vp} \in \mathbb{R}^{d_r \times (d_p+d_q)}$
 - orthogonal loss
   - ![alt text](image-13.png)
-  - ensure the independence of the decomposed modal-specific spaces from the modal-shared spaces ➡️ orthogonal constraint
-  - 이 손실 함수는 위 가중치 행렬들을 서로로 내적한 행렬의 Frobenius Norm(전체 요소의 에너지)을 최소화 ➡️ 특화 표현과 공유 표현이 서로 겹치지 않도록 (즉, 직교하도록) 만듦 ➡️ 강제 분리: modal-shared feature와 modal-specific feature가 서로 다른 정보를 담도록
-  - 없다면? shared vector와 specific vector가 같은 정보를 학습할 수 있음
+  - ensure the independence of the decomposed modal-specific spaces from the modal-shared spaces
+  - 이 손실 함수는 위 가중치 행렬들을 서로 내적한 행렬의 Frobenius Norm(전체 요소의 에너지)을 최소화 ➡️ 특화 표현과 공유 표현이 서로 겹치지 않도록 (즉, 직교하도록) 만듦 ➡️ 강제 분리: modal-shared feature와 modal-specific feature가 서로 다른 정보를 담도록
+  - orthogonal loss가 없다면? shared vector와 specific vector가 같은 정보를 학습할 수 있음
 ### 4) Modal Integration
 - modern behavioral finance theory [6], [57], [58]
   - investors are considered irrational and often swayed by opinions expressed in the media
