@@ -155,6 +155,7 @@
       - transaction features of stock i on the Tth day
       - the highest and lowest price, opening and closing price, trade volume, and rankings of these values over 5 days, 20 days, and 60 days
     - standardize the price values of each stock ➡️ address varying price levels
+      - 아마, (x-평균)/표준편차 의 방식으로 하지 않았을까...
   - 3. tabular(테이블 형식) technical indicators
     - ![alt text](image-3.png)
     - computed through the technical analysis of historical trading signals
@@ -183,9 +184,9 @@
   - integrate trimodal information including time series (trading signals), tabular features (technical indicators), and natural languages (textual news)
 ### 1) Pseudo-News Padding and Activation State
 - news may be absent for certain stocks on a given day
-  - fill the news position with pseudo-news(i.e., a space character) ➡️ address the issue of modality incompleteness with flexibility
+  - fill the news position with pseudo(수도)-news(i.e., a space character) ➡️ address the issue of modality incompleteness with flexibility
   - differentiate pseudo-news from the real news
-    - mutually exclusive subsets on the day 𝑡
+    - two mutually exclusive subsets on the day 𝑡
     - a nonactivation subset 𝑉⁽⁰⁾
       - 𝑖 ∈ 𝑉⁽⁰⁾: stock 𝑖 contains price-only information
     - an activation subset 𝑉⁽¹⁾
@@ -200,7 +201,7 @@
   - news representation: the average of all these embeddings belonging to the same stock
     - ![alt text](image-6.png)
     - L: the number of stock-specific news on the target trading day
-  - news-induced movement
+  - news-induced movement(크기를 갖는다 or 길이를 갖는다)
     - ![alt text](image-40.png)
 - time-series trading signals
   - the bidirectional LSTM (Bi-LSTM)
@@ -214,6 +215,7 @@
   - TabNet encoder
     - ![alt text](image-10.png)
     - the tabular features ➡️ a continuous vector space
+      - (벡터로 만들었다, continuous 는 값 자체가 실수이기 때문이 아닐까?)
   - ![alt text](image-11.png)
 - 최종 결과: two movement
   - news-induced movement: $m_i\in \R^{d_m}$
@@ -225,9 +227,8 @@
   - news-related information, price-related information ➡️ project into four different spaces(선형변환한 것이라고 볼 수 있음, 모든 사영은 선형변환이지만, 모든 선형변환이 사영은 아님)
     - 입력 행렬을 다른 공간에 직각적으로 투사하는 것을 project 이라고 함
   - 기타 질문
-    - 왜 Decomposition을 설명하면 Fuse(합친
-    - 다)는 얘기로 시작할까?
-- four different spaces
+    - 왜 Decomposition을 설명하면 Fuse(합친다)는 얘기로 시작할까?
+- four different spaces(4개 차원 공간으로 projection 했다)
   - news-stream integration
     - 1) modal-specific feature extraction
     - 2) modal-shared feature extraction
@@ -235,7 +236,7 @@
     - 3) modal-specific feature extraction
     - 4) modal-shared feature extraction
   - modal-specific feature: 특정 종목에 대한 특징
-  - modal-shared feature: 시장 또는 섹터 전반에 대한 특징
+  - modal-shared feature: 공유 특징
   - ![alt text](image-12.png)
   
 | 기호                            | 의미                       |
@@ -314,7 +315,7 @@
     - opposing sentiments: alienated
     - similar sentiment: closer
   - ![alt text](image-21.png)
-    - sign function: discerns whether nodes i and j share the same sentiment
+    - sgn function(부호함수): discerns whether nodes i and j share the same sentiment
       - positive(+1) if nodes i and j share the same sentiment polarity ➡️ minimization of their distance cost
       - negative(-1) if not
       - $\hat{h_i^+}, \hat{h_i^-}$: 확률로 0과 1사이의 값을 가지며, 둘이 더하여 1이 됨
@@ -326,6 +327,7 @@
         - x < 0 이면 -1 반환
         - x = 0 이면  0 반환
     - $cos(n_i, n_j)$
+      - 코사인 유사도가 아니라 코사인 디스턴스 일지도...
       - 코사인 유사도는 두 벡터 사이의 방향 유사도를 측정
       - $\cos(\mathbf{n}_i, \mathbf{n}_j) = \frac{\mathbf{n}_i \cdot \mathbf{n}_j}{\|\mathbf{n}_i\| \|\mathbf{n}_j\|}$
         - 두 벡터의 내적값을 두 벡터의 노름으로 나눈값
@@ -340,18 +342,18 @@
 ### 2) Interaction inference
 - Stocks often interact dynamically based on real-time market movements
   - predefined, hard-coded stock networks fail to capture the full complexity of these relationships
-  - 주식 간의 상호작용은 정적인 관계가 아니라 시간에 따라 계속 달라지는 동적인 관계이기 때문문
+  - 주식 간의 상호작용은 정적인 관계가 아니라 시간에 따라 계속 달라지는 동적인 관계이기 때문
 - a graph dual-attention mechanism
   - learns the attention weights ➡️ reflecting the flow of information between nodes
   - 현재 시점의 주가, 뉴스 등 다양한 요인에 기반해 동적으로 attnetion score를 계산
 - nonactivated stocks: restrict the information exchange 
-  - activated ➡️ nonactivate: 단방향, 반대 방향은 없음
+  - activated ➡️ nonactivated: 단방향, 반대 방향은 없음
     - 뉴스가 있는 주식이 영향을 주지, 뉴스가 없는 주식으로부터 영향을 받지는 않음
   - among nonactivated stocks themselves: 일부 노드끼리만 연결됨
-- partially bipartite GAN
+- partially bipartite GAT
   - ![alt text](image-22.png)
     - 감성 프롬프트를 가진 종목 𝑉(1)의 정보를 뉴스가 없는 종목 𝑉(0)에 전달하고자 하기 때문
-- normalized directed connection strength
+- normalized directed connection strength(합이 1이 되도록 가중치를 만드는 것이 normalized)
   - ![alt text](image-23.png)
     - $i$: target node, $j$: source node
     - $\alpha^{(1)}$: nonactivated node(i)가 actvated node(j) 로부터 받는 가중치
@@ -364,7 +366,8 @@
       - $a_{\phi}$: attention score 생성을 위한 weight vector
       - $a_{\phi}^T\cdot ()$: 최종적으로 **attention score(스칼라)**를 생성하기 위한 선형 조합
   - 기타 질문
-    - 두 행렬($n_i, n_j$)을 단순히 concat 하고, 선형변환을 적용한 결과를 attention score 라고 할 수 있는가? concat은 둘의 관계를 명시적으로 표현하고 내적보다 저 유연한 표현력을 가진다?
+    - 두 행렬($n_i, n_j$)을 단순히 concat 하고, 선형변환을 적용한 결과를 attention score 라고 할 수 있는가? concat은 둘의 관계를 명시적으로 표현하고 내적보다 저 유연한 표현력을 가진다? 
+      - attention score를 구하는 과정이 아니라 가중치 비율을 곱하는 과정을 attention 이라고 한다.
     - applied discontinuously 가 무슨 뜻인가?
 ### 3) Information Exchange
 - every stock is influenced by both news- and price-driven movements
@@ -375,13 +378,15 @@
     - $\tilde{m}_i$: **노드 i**에 대해 이웃 노드들로부터 받은 메시지를 집계한 최종 message vector
     - $\alpha_{i,j}^{(k)}$: 노드 𝑗 → 노드 𝑖 로의 attention weight (normalized importance)
       - governing the strength of the connection
-    - $\mathbf{e}_{i,j}$: 노드 𝑗 → 노드 𝑖로 전달되는 메시지 (edge representation)
+    - $\mathbf{e}_{i,j}$: 노드 𝑗 → 노드 𝑖로 전달되는 information flow (edge representation)
       - $$\mathbf{e}_{i,j} = \mathbf{W}_{eo} \left[ \mathbf{n}_i \mathbin\Vert \sigma \left( \mathbf{W}_{on} \left[ \mathbf{n}_i \mathbin\Vert \mathbf{n}_j \right] \right) \mathbin\Vert \mathbf{n}_j \right]$$
-        - 두 노드의 임베딩을 기반으로 노드 간 상호작용 메시지를 생성(encapsulates the information flow)
-          - 단순한 임베딩이 아니라, 두 노드 사이의 상호작용을 내포한 stock-to-stock 메시지 표현(encodes the stock-to-stock interaction into a stock-sensitive representation)
+        - 두 노드의 임베딩을 기반으로 노드 간 상호작용 정보 생성(encapsulates the information flow)
+          - 단순한 임베딩이 아니라, 두 노드 사이의 stock-to-stock 정보(encodes the stock-to-stock interaction into a stock-sensitive representation)
         - $\mathbf{W}_{on} \in \R^{d\times 2d}$: 첫 번째 변환 weight (MLP)
         - $\mathbf{W}_{eo} \in \R^{d\times 3d}$: 최종 메시지 생성용 weight
     -  $\mathbf{e}_{i,j}$는 attention score인 $\alpha_{i,j}^{(k)}$로 가중합되어 노드 i 로 전달됨
+       -  e는 엣지
+       -  m은 메세지 벡터
 ### 4) Output Mapping
 - nonactivated stocks
   - $\hat{y_i} \in \R^2$
@@ -498,9 +503,10 @@
 - the pretraining objective
   - all loss terms with different weights
   - ![alt text](image-29.png)
-  - 시간 축 전체에 대한 누적합을 산출
+  - 시간 축 전체에 대한 누적합을 산출(갖고 있는 것 다한다)
   
 ![alt text](image-44.png)
+- Accumulate는 배치안에서 계산된 모든 것을 누적하여 한 번에 Opimization을 한다.
 
 ## B. Model Fine-Tuning
 - pretraning: focus on graph dual-attention module
@@ -594,6 +600,7 @@
   - evaluate the average performance of 12 test months in 2019
   - 예측 대상 month $t$가 1 증가할 때마다, size T인 인풋 윈도우도 1 증가
 - grid search ➡️ optimal hyper parameters
+  - 그리드 서치가 뭔지 확인해!
 - Glorot initialization ➡️ initialize learnable parameters
   - Xavier Initialization 와 동일
   - 학습 초기에 가중치를 적절한 크기로 랜덤 초기화
@@ -629,6 +636,7 @@
 - results of the Diebold-Mariano test(ACC, MCC)
   - PA-TMM: outperforms state-of-the-art baselines
   - 일부 비교 모델과의 성능 차이가 미묘해서, 단순 수치 비교만으로는 불충분할 때 통계적 유의미성을 확인하기 위해 DM 검정을 사용
+    - 이것에 대한 표 4번은 설명해야 함
 - 시사점
   - effectiveness of adapting the model to the long tail effect in feature distribution
   - effectiveness of prompting the news sentiments to the entire stock pool
@@ -680,11 +688,11 @@
   - sentiment prompts (w/o Pmts) and graph aggregation mechanism (w/o Msgs)
     - particularly pivotal role in dealing with the long tail effect in feature distribution
     - ensure the feasibility(실행가능성, 타당성) of implementing MPA 
-  - modal decomposition (w/o $L_{pol}$) and polarized activation (w/o $L_{ort}$)
+  - modal decomposition (w/o $L_{ort}$) and polarized activation (w/o $L_{pol}$)
     - enhancing the efficiency of utilizing news
     - complement each other ➡️ enhancing the quality of representations learned at different stages
 - 기타 질문
-  - 왜 Pmts나 Msg가 MPA를 적용하는데 필요하다고 보는가? 둘이 독립적이지 않나?
+  - 왜 Pmts나 Msg가 MPA를 적용하는데 필요하다고 보는가? 둘이 독립적이지 않나? MPA를 통해 Pmts나 Msg 성능이 확보되는데, 이것은 곧 Pmt나 Msg가 있어야 MPA가 잘 작동한다.
 ### 2) Effectiveness of MPA
 - three variants of PA-TMM
   - w/o MPA
@@ -711,6 +719,7 @@
   - the more precise, the greater its potential for earning
 - lower performance of ARR and ASR on the S&P 500 dataset compared to the NASDAQ 100 dataset
   - numerous stock choices ➡️ the increased complexity of risk management ➡️ the noticeable decline in the accuracy of price movement prediction
+  - 내 생각? 스탁 개수가 많으면 오히려 더 정확한 예측이 가능한 것 아닌가?
 - news-based multimodal methods demonstrate higher ASR scores
   - a notable enhancement in the model's resilience(회복력) to risks
 - without the constraint of predefined relationships ➡️ more effective in harnessing(to control something, usually in order to use its power) news sentiments ➡️ heightened profitability when accounting for the inherent risks involved
@@ -734,6 +743,7 @@
 - huge $\theta$ ➡️ mistrust the provided movement prompts ➡️ not fully leveraging sentiments within the news to a certain extent
 ### 3) Dimensions of $d_n$(N 256, S 384) and $d_e$(N 256, S 320)
 - excessively low or high dimensionality ➡️ under-fitting or over-fitting ➡️ worsens the ACC score
+  - dn은 노드의 길이, de는 엣지의 길이
 
 ![alt text](image-47.png)
 
