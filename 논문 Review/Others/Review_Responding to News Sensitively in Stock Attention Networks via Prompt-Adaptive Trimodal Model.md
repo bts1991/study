@@ -64,10 +64,6 @@
     - graph dual-attention module: dynamically inferring the stock attention network by a graph dual-attention mechanism
       - circumvents(우회) direct similarity measurement of heterogeneous(서로 다른) representations(news, prices)
       - overcome biased attention
-      - (What is Graph Dual-Attention?)
-        - Node-level Attention 뿐만 아니라, Feature-level Attention을 같이 적용
-        - 즉, 노드 간의 중요성과 특선 간의 중요성을 같이 고려
-        - 즉, **"누구로부터 어떤 정보를 얼마나 받아들일 것인가"**를 이중으로 판단하는 구조
   - an equivalence resampling (EQSamp) strategy
     - tackle the tail feature scarcity problem
     - data augmentation by establislng a direct connection between market sentiments in news and stock movements by considering the dominant impact of news
@@ -77,7 +73,7 @@
     - mainly focusing on understanding news representations
 - contributions
   - a learning framework named PA-TMM
-    - heterogeneous modality fosion
+    - heterogeneous modality fusion
     - effectively captupes news propagation dynamics by graph learning
   - targeted pretraining method named movement prompt adaptation (MPA)
     - respond to tailed news sensitively
@@ -87,12 +83,14 @@
     - enhancing the generalization ability of GNNs on feature-imbalanced datasets
 # Related Work
 ## Time-Series Stock Prediction
-- encoding an individual stock ➡️ a sequential latent representation
+- encoding an individual stock as a sequential latent representation(표현)
   - RNNs based: LSTM, GRU, Transformer
   - capture the underlying time-varying patterns from multiple time steps
 - encode the time series for each stock using RNNs
   - PEN [40], MAN-SF [12], and MTR-C [41]
-- mningling different types of market factors
+- mingling different types of market factors [42], investment behaviors [43], and technical indicators
+  - (market factors [42]: moving average convergence/divergence (MACD), price-tobook ratio (P/B),  relative strength index (RSI))
+  - (investment behaviors [43]: 사람들의 집합적 투자 행동에서 추출된 주식 속성이 주가 예측 과제에서 높은 효과성을 갖고 있음)
   - relational event-driven stock trend forecasting (REST) [44]
     - utilizes the event information from the company's announcements
 - produce powerful high-frequency stock factors
@@ -119,7 +117,7 @@
 - 효과성 of graph-based method
   - aggregating peer influences ➡️ update node representations to capture neighbor-induced movement
 ## News-Based Stock Prediction
-- the advancement of multunedia technology ➡️ integrating external information beyond the trading market
+- the advancement of multumedia technology ➡️ integrating external information beyond the trading market
   - financial news [40], [50], [51] or social media posts [7], [20] 
 - 시도1: the graph convolutional networks (GCNs)
   - multi-source aggregated classification (MAC) [l]: aggregate the effects of news on related companies
