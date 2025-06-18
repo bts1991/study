@@ -2,7 +2,8 @@
 - rapid growth of multimedia platforms(news outlets and social media) ➡️ comprehensive evaluations about identifing potential investment
 - real-world investment: subtle insights from financial news ➡️ significant profit indicators
 - stock price signals inherently contain randomness(랜덤 워크 이론) ➡️ predicting the deterministic component(예측 가능한 요소) brought about by news
-- two feature modalities in financial time-series forecasting
+- two feature modalities in financial time-series
+-  forecasting
   - multivariate time-series features
     - opening price, closing price, and volume
   - discrete tabular features
@@ -78,7 +79,7 @@
   - targeted pretraining method named movement prompt adaptation (MPA)
     - respond to tailed news sensitively
     - prevents it from overfitting due to over-reliance on stocks carrying news
-  - EQSarnp strategy
+  - EQSampling strategy
     - financial data augmentation when pretraining to overcome the news scarcity problem
     - enhancing the generalization ability of GNNs on feature-imbalanced datasets
 # Related Work
