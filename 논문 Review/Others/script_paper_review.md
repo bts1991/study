@@ -4,16 +4,12 @@ Intro
 
 	2025학년도 2학기 석사과정으로 MLCF 연구실에 지원한 방태성입니다.
 
-	저는 정형 데이터와 비정형 데이터를 융합하여, 장단기적인 주가 흐름을 예측하는 연구에 관심을 가지고 있습니다.
+	저는 정형 데이터와 비정형 데이터를 융합하여, 장단기 주가 흐름을 예측하는 연구에 관심을 가지고 있습니다.
 
 	이번 랩테스트에서는 제 연구 관심과 밀접하게 연관된 논문인
 	**"Responding to News Sensitively in Stock Attention Networks via Prompt-Adaptive Trimodal Model"**을 리뷰 주제로 선정하였습니다.
 
-	이 논문은 2025년 6월, IEEE Transactions on Neural Networks and Learning Systems에 게재되었으며,
-
-	시계열 데이터, 기술적 지표, 뉴스라는 세 가지 tri-modal 정보를 통합하고,
-	뉴스가 시장에 미치는 영향을 민감하게 반영하기 위해 프롬프트 기반 학습 구조를 도입하여
-	주가의 방향성과 변동성을 효과적으로 예측하는 모델을 제안하고 있습니다.
+	이 논문은 2025년 6월, IEEE Transactions on Neural Networks and Learning Systems에 게재되었습니다.
 
 
 Outline
@@ -29,11 +25,12 @@ Introduction-1
 	
 	특히, 뉴스와 관련
 
-	연구자들의 관심
+	연구자들의 관심 증가
 
 	//
 
-	기존 주가 예측 여러 모델
+	기존 주가 예측 여러 모델, 한계 존재
+
 	각각의 단점
 
 	//
@@ -51,20 +48,12 @@ Introduction-1
 Introduction-2
 
 	논문에서 제시한 Figure 1
-	일부 종목에만 뉴스가 존재하는 현실을 도식화
-
-	피쳐 디스트리뷰션
-
-	제이피모건, 웰파고만 뉴스 정보
-
-	tail이 길어짐
-
-	Stock Attnetion Network
-
-	MS, Google, Apple이 
 	
-	뉴스 정보에 주목하지 않고 있는 현상
+	모든 종목이 갖는 정보
 
+	일부 종목이 갖는 정보
+
+	전체적 영향을 주는 뉴스임에도
 
 Introduction-3
 
@@ -86,7 +75,7 @@ Introduction-3
 
 Related Work
 
-	기존 관련 연구들 크게 3가지
+	기존 연구들 크게 3가지
 
 	Time-Series Stock Prediction
 
@@ -188,29 +177,362 @@ PA-TMM Architecture
 	학습
 
 
-PA-TMM Architecture: Cross-Modal Fusion Module
+(상세 설명)
 
+	Cross-Modal Fusion Module
 
+		3대의 모달리티 중 2개만 존재하는 경우
 
+		수도뉴스로 채움
 
+		2개의 서브셋으로 분리
+
+	Representation Learning
+
+		(그림 먼저)
 	
-	Cross-Modal Fusion Module, Graph Dual-Attention Module의 2개의 subnetwork로 구성되어 있고, 
-	MPA를 통한 Pretraining과 Fine-tuning을 통해 모델을 학습시킵니다.
+		3개의 모달리티 정보를
+
+		벡터로 임베팅
+
+		각각 버트, Bi-LSTM, TabNet
+
+		각 벡터의 크기는 ~
+
+	Modal Decomposition
+
+		(그림 먼저)
+
+		3개의 모달리티 벡터
+
+		디컴포즈하여
+
+		4개의 다른 벡터를 출력
+
+		//
+
+		decompose 과정 설명	(컨캣과 행렬곱 등)
+
+		서로 다른 4공간에 프로젝션
+
+		출력 결과 설명(모두 dr 크기를 갖는 벡터)
+
+		specific 정보와 shared 정보를 분리
+
+		//
+
+		Orthogonal Loss 설명
+
+		modal-specific 공간과 modal-shared 공간을 서로 직교하는 것이 목표
+
+		곱한 결과의 Frobenius Norm을 최소화
+
+
+	Modal Integration
 	
-	먼저 Cross-Modal Fusion Module에 대해 설명드리면,
-		특정 종목의 뉴스가 없을 경우 2개의 modality로 표현되지 않도록 news position 을 수도 뉴스로 채웁니다.
-		그리고, 뉴스가 없는 종목을 Nonactivation Subset 𝑉^((0)), 그렇지 않은 종목을 Activation Subset 𝑉^((1))로 구분합니다.
+		(그림 먼저)
+
+		디컴포지션 결과를 인터그래이션
+
+		센티, 하이 결과 출력
+
+		//
+
+		Sentiment Prompts
 		
-		이후 3개의 modality를 벡터로 인코딩 합니다. 뉴스 정보는 버트를 통해 m으로 표현하고, Transaction 정보는 Bi-LSTM을 활용해 p 로 표현하고, Technical Indicator는 Tabnet 라이브러리를 활용해 q로 표현합니다.
-	
-		그리고 Modal Decomposition을 통해 3개의 벡터를 4개의 다른 space로 projection 합니다. 뉴스 벡터인 m은 wum과 wvm 행렬을 곱하고, Transaction vector와 Technical Indicator 벡터는 concat 한 이후 wup와 wvp 행렬을 곱한 후 비선형 활성화 함수를 통과하여 각각 news-specific 벡터인 um, news-shared 벡터인 vm, price-specific 벡터인 up, price-shared 벡터인 vp로 표현합니다. 여기서 최종 결과 벡터들의 길이는 d_r로 모두 같습니다.
+		뭐가 중심인지
 
-		이 때, specific vector와 shared vector가 같은 정보를 담지 않도록 하기 위해 Orthogonal Loss를 사용합니다.
-		Orthogonal Loss는 뉴스 벡터와 가격 벡터 각각에 대해 modal-specific 선형 변환 행렬과 modal-shared 선형 변환 행렬이 서로 직교하도록 함으로써 구조적으로 각 선형 변환 행렬을 통과한 벡터가 각각 다른 정보를 갖도록 유도합니다. wum과 wvm이 직교하고, wup와 wvp가 직교할수록 각 행렬의 곱의 크기가 최소화됨으로써 Orthogonal Loss가 작아지도록 모델을 학습합니다.
+		element-wise 곱
+
+		price: noise filter
+
+		과정/과정
+
+		길이가 2인 벡터
+
+		감소, 증가 확률
+
+		이것 자체로 예측 결과
+
+		//
+
+		Hybrid Embeddings
+
+		뭐가 중심인지
+
+		Equally crucial -> Addition Operation
+
+		선형 변환 후 비선형 활성화함수
+
+		길이가 dh인 벡터
+
+	Stock Polarized Activation
+	
+		(그림 먼저)
+
+		입력: Sentiment Prompts, Hybrid Embeddings
+
+		노트 벡터를 임베딩
+
+		//
+
+		영향력이 큰 뉴스 정보
+
+		일부 종목에만 (비대칭성)
+
+		분리하여 임베딩
+
+		함수 설명
+
+		//
+
+		Activated 노드에 대해 
+
+		두 노드를 유사할수록 가깝게, 다를수록 더 멀게
+
+		부호함수와 cos distance 설명
+
+		// 
+
+	Interaction Inference
+	
+		노드들의 관계성을 추론
+
+			어텐션, 바이파알타잇
+
+		Fig 3
+			파셜리 바이파알타잇
+
+			항상 타겟은 Nonactivated
+
+			activated는 주기만 함
+
+		//
+
+		ni가 타겟, nj가 소스
 		
-        그리고 Modal Integration을 통해 주가 움직임에 영향을 주는 Sentiment Prompts, Hybrid Embeddings을  산출합니다.
-        먼저 Sentiment Prompts는 news-specific 벡터와 price-shared 벡터의 element-wise 곱을 통해 price가 news에 대한 noice filter 역할을 하고, 다시 concat, 선형변환, 소프트맥스를 거쳐 주가의 하락과 상승을 비율로 표현하는 길이가 2인 벡터가 만들어 집니다. 이 때, Sentiment Prompts는 뉴스 정보를 가지고 있는 activation subset인 v1에만 존재합니다.
-        그리고 Hybrid Embeddings은 가격 정보와 뉴스 정보가 동일하게 중요하다는 점에 착안해 두 벡터를 더한 후, 다시 concat, 선형변환, 비선형활성화함수를 거처 길이가 d_h인 벡터를 만들어냅니다.
+		노드간 Message Flux 비중
+
+		//
+
+		컨캣, 선형변환, 리키렐루, 벡터 곱 => 스칼라값
+
+
+	Information Exchange
+	
+		어텐션스코어로 엣지와 메세지벡터를 구현
+
+		두 노드 컨캣.... => 엣지 구현
+
+		//
+		
+		엣지에 어텐션 스코어 곲한 가중합
+
+		activated node의 메세지 벡터와 nonactivated node의 메세지 벡터는 합치지 않고 컨캣
+
+		노드간 상호작용을 summary
+
+
+	Output Mapping
+
+		최종 결과로 Movement를 Prediction
+
+		activated stock 
+
+		뉴스 정보가 지배적
+
+		nonactivated stock
+
+		노드 벡터에 메세지 벡터 컨캣
+
+
+	Discussion
+
+		activated stock, nonactivated stock을 분리한 partially bipartite graph
+
+		nonactivated stock가 전달받는 Message vectors 중요한 역할 
+
+			ablation experiments 에서 한번 더 증명 
+
+		activated and nonactivated nodes 분리하는 코스트 높지만
+
+
+	Computational Complexity
+	
+		Cross-Modal Fusion Module
+		
+		Bi-LSTM 단계에서 
+
+		나머지는
+
+		Graph Dual-Attention Module
+		
+		Interactions Inference 단계에서
+
+		최종 시간 복잡도는
+
+
+Model Optimization
+
+	(큰 그림) 다음 슬라이드 이미지 활용
+
+		(파란선) Movement Prompt Adaptation 통한 pretraning 설명
+		(붉은선) Fine-tuning
+
+	Movement Prompt Adaptation: Equivalence Resampling
+	
+		Equivalence Resampling로 Data Augmentation 
+
+		실제 주가 움직임으로 prompts 생성
+
+		long tail effect 해결, 일반화 성능 개선
+
+		//
+
+		포아송 분포 활용
+
+		엡실론(균등 분포)
+
+		Mutation Probability 로 인버팅
+
+		//
+
+		하루에 50회 반복
+
+	Pretraining Objectives
+	
+		𝐿_𝑚𝑜𝑣^((0))+𝛽𝐿_𝑜𝑟𝑡+𝛾𝐿_𝑝𝑜𝑙 3개의 손실함수로 구성
+
+		𝐿_𝑚𝑜𝑣(0)은 nonactivated stock 에 대한 손실함수
+		
+		binary cross entropy를 활용
+
+		정답을 맞출 확률이 클수록 손실함수가 작아지도록 구현
+
+		3 손실함수의 가중합을 최소화
+
+
+	Fine-Tuning Objectives
+	
+		𝐿_𝑚𝑜𝑣^((1))+𝐿_𝑚𝑜𝑣^((0))+𝛽𝐿_𝑜𝑟𝑡+𝛾𝐿_𝑝𝑜𝑙
+
+		activated stock 에 대한 손실함수
+		
+		binary cross entropy를 활용
+		
+		4개의 손실함수의 가중합을 최소화
+
+Experiments
+
+	Evaluation Setup
+	
+		Datasets
+		
+			순서대로
+
+		Compared Baselines
+		
+			순서대로 읽으면서
+
+		Evaluation Metrics
+		
+			4가지~
+
+			2개 먼저
+
+			백테스팅
+
+			나머지 2개
+
+		Implementation Details
+		
+			오른쪽 표 참고
+
+		Trading Portfolios
+			
+			백테스팅 probablilty 평가를 위해
+			
+			20개로 구성
+
+	Stock Movement Prediction
+
+		다른 모델들과 실험 결과 비교
+	
+		ACC와 MCC 비교에서 수치상 차이가 크지 않음
+
+		DM 검정을 통해 유의 수준 확인
+
+		나스닥 최소 10%,  SNP는 최소 5% 수준에서 유의미한 차이를 분석
+
+	Analysis
+
+		실험 결과 분석
+
+		순서대로 읽으면서
+
+		결국 PA-TMM 이 짱
+
+	Ablation Study
+
+		일부 구성을 제외하고 실험 진행
+	
+		모델 아키텍쳐의 효과성
+
+			표 설명
+
+			글 설명	
+
+		MPA의 효과성
+
+			표 설명
+
+			글 설명
+
+	Backtesting Profitability
+
+		실제 투자 모의 실험
+
+		표 설명
+
+		글 설명
+
+	Stress Test During Market Crash
+	
+		마켓 크러쉬
+
+		그래프 설명
+
+	Parameter Sensitivity Analysis
+	
+		윈도우 사이즈, Mutation Probability, 노드와 엣지의 디멘션
+
+		그래프와 함께 설명
+
+	Case Study on Exploring Stock Attention Networks
+	
+		사례 설명
+
+		그림과 함께 설명
+
+Conclusion
+
+
+이 논문을 통해 저는, 뉴스나 사회적 인식과 같은 정성적 정보가 실제로 주가에 영향을 미치고, 이를 학습 가능한 형태로 정제하고 활용할 수 있다는 점에 깊은 인사이트를 얻었습니다.
+
+제 연구 역시 기업의 내재 가치를 정량적 지표뿐 아니라 정성적 요인—예를 들어 뉴스, 임직원 리뷰, 산업 전망 등—을 반영한 중장기 주가 예측 모델을 목표로 하고 있습니다.
+
+향후에는 이 논문에서 제시한 프롬프트 기반 학습 전략이나 attention 구조를 제 가치 기반 예측 모델에 접목시켜, 저평가된 우량 종목을 조기에 식별하고 장기 수익 가능성을 정량화하는 프레임워크로 발전시키고자 합니다.
+
+단순한 예측 정확도를 넘어서, 실제 투자 의사결정에 신뢰성 있는 분석을 제공하는 모델을 구축하는 것이 제 연구의 최종 목표입니다. 감사합니다.
+
+
+
+
+
+
+
+
+
 
 
 
