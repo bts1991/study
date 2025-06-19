@@ -1,4 +1,4 @@
-First
+Intro
 
 	안녕하세요.
 
@@ -17,57 +17,183 @@ First
 
 
 Outline
-	발표 목차는 논문의 흐름과 동일하게 ~~~~ 의 순으로 진행하겠습니다.
+	발표 목차는 논문의 흐름과 동일하게 ~~~~ 의 순으로
 	
-Introduction
-	도입부는 Multimedia Platforms의 빠른 증가에 대한 얘기로 시작됩니다. Financial news & social media 에서 제공되는 정보가 중요한 투자 신호의 역할을 하기 시작했고, 여전히 randomness가 존재하는 주식 시장에서 주가 흐름을 예측하는데 deterministic components로서 주목을 받고 있다고 얘기합니다.
-	
-	하지만, 기존의 모델들이 Financial news를 충분히 활용하고 있지 못한다고 지적합니다.
-		Time-series Forecasting Model들은 모든 종목들이 서로 독릭접이라는 가정아래 Momentum spillover와 같은 종목 간의 상호작용을 고려하지 못했고,
-		Graph Neural Network 기반 모델들을 Hard-coded microstructure로 인해 종목간 관계성을 충분히 포착하지 못했고,
-		Graph Attention Networs는 종목간 관계를 고려하는 부분은 개선했지만, 다량의 가격 정보 속에서 뉴스 정보에 attention이 Biased되었다고 합니다.
-	
-	여기서 두가지 중요한 Challenges를 언급합니다.
-		실제 현실에서는 일부 종목만 주식 정보를 갖고 있다는 전제 하에서 
-		
-		먼저, Feature Distribution에 나타나는 Long Tail Effect 로 인해 뉴스 정보에 덜 주목하게 된다는 것과
-		
-		데이터 자체가 부족하여 일반화에 문제가 있다는 점입니다.
+Introduction-1
 
-	논문에서 제시한 Figure 1에서는
-		모든 종목들이 Time-series features and Technical indicators 가지고 있는데 반해, JPM, WFC만 뉴스 정보를 가지고 있는 Long Tail Effect가 나타나고 있고, 
-	
-		아래 그림을 보면 JPM과 WFC에 대한 뉴스가 시장 전반에 영향을 줌에도 불구하고, MS나 Google, Apple은 주목하고 있지 않고 있음을 보여줍니다.
-		
-	Introduction의 다음 부분에서는 이에 대한 터닝 포인트로 Financial News 의 특이한 본성에 대해 얘기합니다.
-		특정 종목에 대한 이벤트가 뉴스로 전달되면 시장 전반에 즉각적으로 지배적인 영향을 미친다는 것입니다. 그에 대한 예시로 2024년 1월 미국의 Federal Aviation Administration이 보잉 737 모델의 170기 이상을 비행할 수 없도록 명령했고, 이로 인해 보잉의 주가가 8% 하락했으며, 연이어 보잉의 주요 경쟁자인 에어버스의 주가는 소폭 상승했습니다.
-		
-	하지만 이러한 특성이 기존에는 반영되지 못했음을 지적하며, 기존의 문제들을 해결하기 위한 rompt-Adaptive Trimodal Model (PA-TMM)을 제안합니다.
-		이 모델은 Cross-Modal Fusion Module, Graph Dual-Attention Module, Movement Prompt Adaptation 그리고 Pretraining, Fine-tuning으로 구성되어 있으며, 
+	초반부는 백그라운드의 변화
+	그에 따라 등장하는 새로운 챌린지를 
 
-		각각을 통해 Sentiments Prompts, Stock Attention Network, Movement Prompt를 구현하고 Pretraining, Fine-tuning을 사용해 financial news에 더 민감하게 반응할 수 있게 됩니다
+	멀티미디어 플랫폼의 빠른 증가
+	주가 예측을 하는데 결정적 요소
 	
-	본 논문의 기여는 다음과 같은 아이디어를 제시합니다. 
-		먼저, New Resampling Strategy를 통해 data를 augmentation 하여 long-tailed feature distribution를 해결하는 것입니다. 
-		다음으로 financial news까지 고려한 Trimodal 방식을 적용하는 것입니다. 
-		마지막으로, 종목간 dynamic interaction을 반영하기 위해 고정된 네트워크가 아닌 attention을 적용한 네트워크를 구현하는 것입니다.
+	특히, 뉴스와 관련
+
+	연구자들의 관심
+
+	//
+
+	기존 주가 예측 여러 모델
+	각각의 단점
+
+	//
+
+	여기서 중요한 2가지 챌린지 언급
+
+	일부 주식만 뉴스 정보를 갖는 현실을 반영
+
+	브레이킹 뉴스가 주목을 받지 못하고,
+	가격 정보에 attention이 편향되는 문제
+
+	뉴스 정보 자체의 부족으로 일반화 성능이 떨어지는 문제
+
+
+Introduction-2
+
+	논문에서 제시한 Figure 1
+	일부 종목에만 뉴스가 존재하는 현실을 도식화
+
+	피쳐 디스트리뷰션
+
+	제이피모건, 웰파고만 뉴스 정보
+
+	tail이 길어짐
+
+	Stock Attnetion Network
+
+	MS, Google, Apple이 
+	
+	뉴스 정보에 주목하지 않고 있는 현상
+
+
+Introduction-3
+
+	뉴스의 본성이 가지는 Idiosyncratic 특징이 터닝포인트
+
+	브레이킹 뉴스
+
+	즉각적으로 주가 움직임에 영향력을 행사
+
+	보잉의 예시
+
+	//
+
+	이를 활용해 PA-TMM 제시
+
+	//
+
+	주요 기여사항
 
 Related Work
-	관련 연구들 중 Time-Series Stock Prediction은 RNN을 활용하여 time series pattern을 분석합니다. 이후 market factors [42], investment behaviors [43], technical indicators 를 통합하는 연구가 진행되었지만, 종목간의 관계가 상호 배타적이라는 가정을 벗어나지 못했습니다.
-	
-	실제 기업들은 하나의 시장 경제체제에서 서로 연결되어 있다는 개념을 반영한 Graph-Based Stock Prediction 에서는 Graph Neural Networks를 이용해 종목 간의 관계성을 고려했습니다. 하지만 노드간 관계의 강도를 고려하지 않는 static network를 기반으로 했다는 한계가 있습니다.
-	
-	이후, News라는 Modality를 반영하기 시작하면서, Graph Attention Networks 를 같이 적용해 종목 간의 관계성도 개선했지만, 실제 현실에서 뉴스와 관련된 주식의 수가 매우 적은 long-tail effect를 해결하지는 못했습니다.
-		
+
+	기존 관련 연구들 크게 3가지
+
+	Time-Series Stock Prediction
+
+		RNN 이용
+		타임 시리즈 패턴 분석
+
+		추가적인 통합
+
+		문제: 상호 배타성의 기본 가정이 
+
+	Graph-Based Stock Prediction
+
+		주식시장을 그래프
+
+		종목간 상호관계 포착
+
+		문제: 정적인 상호관계를 기반
+		(현실과 일치하지 않음)
+
+
+	News-Based Stock Prediction
+
+		뉴스 정보를 통합
+
+		어텐션 네트워크로 동적인 상호관계를 구축
+
+		문제: 특정 종목에만 뉴스가 존재하는 롱테일 효과 간과
+
+
 Problem Statement
-	본 연구는 문제를 해결하기 위한 예측 방법을 회귀가 아닌 분류로 접근합니다. 하루 전 날짜의 주가와 비교하여 오늘이 주가가 올랐는지 내렸는지를 분류하는 방식입니다.
+
+	본 모델을 분류 문제로 정의
+
+	현실에서 특정 주가 예측 어려움
+
+	어제와 오늘 주가 비교
+
+	//
+
+	3가지 input feature
+
+	T-1 시점의 뉴스 텍스트 데이터
+
+	T 기간 동안의 주식 거래 데이터
+		고가, 저가, ....
+
+	T-1 시점에 테크니컬 인디케이터
+		Moving Average Indicators...
+
 	
-	다음으로, Input feature 로 3가지의 modality를 사용합니다. 
-	Textual News, Historical transaction features, Technical Indicators 입니다.
-	
-	각각 뉴스 텍스트 데이터, 종가/시가/거래량 등의 주식 거래 데이터, 기술 분석을 통해 계산된 이동평균지표와 모멘텀지표 등이 있습니다.
-		
 PA-TMM Architecture
+
+	본 논문의 아키텍쳐는 2개 서브 네트워크
+
+	Fine-tuning 전 ~ 사전학습 전략
+
+	(큰 흐름 설명)
+
+	먼저 Cross-Modal Fusion Module
+
+	3개의 모달리티 통합, sentiment prompt와 hybrid embedding의 2가지 벡터를 출력
+
+	//
+
+	Graph Dual-Attention Module은
+
+	sentiment prompt와 hybrid embedding를 입력으로 받아
+
+	Attention Network를 거쳐
+
+	Movement Predcition 출력
+
+	// 
+
+	학습 과정은
+
+	Pretraning 후 Fine-tuning 순서로 진행
+
+	//
+
+	Pretraning 에서는 
+
+	Sentiments Prompt를 사용하지 않고
+
+	~~ 통과해서
+
+	Movement Prompt 출력
+
+	Graph Dual-Attention Module을 통해 
+
+	학습
+
+	//
+
+	Fine-tuning 에서는
+
+	Cross-Modal Fusion Module, Graph Dual-Attention Module을 거쳐
+
+	학습
+
+
+PA-TMM Architecture: Cross-Modal Fusion Module
+
+
+
+
+	
 	Cross-Modal Fusion Module, Graph Dual-Attention Module의 2개의 subnetwork로 구성되어 있고, 
 	MPA를 통한 Pretraining과 Fine-tuning을 통해 모델을 학습시킵니다.
 	
