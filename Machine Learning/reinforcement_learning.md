@@ -194,3 +194,8 @@ $$\pi_{\theta} (s,a)=\mathbb{P}[s|a,\theta]$$
     - $J_{av}v(\theta)=\sum_s d^{\pi_{\theta}}(s) \sum \pi_{\theta}(s,a)R_s^a$
   - $d^{\pi_{\theta}}$: Stationary Distribution of Markov Chain
     - 정착 분포: 어떤 상태에 얼마나 자주 머무는가 → 일종의 가중치 역할
+- One-Step MDP
+  - Starting in state s ~ d(s)
+  - Terminating after one time-step with reward r
+  - $J(\theta)=\mathbb{E}_{\pi_{\theta}}[r]=\sum_{s \in S}d(s)\sum_{a \in A}\pi_{\theta}(s,a)R_{s,a}$
+  - $\nabla_{\theta}J(\theta)=\sum_{s \in S}d(s)\sum_{a \in A}\pi_{\theta}(s,a)\nabla_{\theta}\log \pi_{\theta}(s,a)R_{s,a}=\mathbb{E}_{\pi_{\theta}}[\nabla_{\theta}\log \pi_{\theta}(s,a)r]$
