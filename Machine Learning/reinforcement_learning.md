@@ -1,6 +1,6 @@
 # Model-Based
-- Dynamic Programming: Danamic sequential + Optimized programming
-  - Prperty: Decompsed into subproblems, Subproblems recur many times
+- Dynamic Programming: Dynamic sequential + Optimized programming
+  - Property: Decompsed into subproblems, Subproblems recur many times
   - Markov Devision Processes satisfy both properties
   - Assume full knowledge of the MDF
   - i.e. Model is known
@@ -8,7 +8,7 @@
     - Full Width Back-up
 ## Prediction: Policy Evaluation
   - Policy $\pi$ is given → Evaluate policy
-    - $$v_{k+1} = \sum_{a\in A} \pi(a|s)\left (R_s^a+\gamma\sum_{s'\in S}P_{ss'}^av_k(s')\right)$$: Bellam Expectaton Equation
+    - $$v_{k+1} = \sum_{a\in A} \pi(a|s)\left (R_s^a+\gamma\sum_{s'\in S}P_{ss'}^av_k(s')\right)$$: Bellman Expectaton Equation
 ## Control: Policy Iteration
   - Policy $\pi$ is given → Evaluate policy → Improve policy 
     - $$\pi'=greedy(v_\pi)$$: Greedy Policy Improvement
@@ -16,7 +16,7 @@
     - (→ Evaluate policy → Improve policy → Evaluate policy → Improve policy → Evaluate policy → Improve policy)
   - If improvements stop
     - $$q_{\pi} (s,\pi'(s))=\max_{a\in A} q_\pi(s,a)=q_\pi(s, \pi(s)) = v_\pi(s)$$
-    - Bellman optimalicy eqation has been satisfred
+    - Bellman optimality eqation has been satisfied
       - $$v_\pi(s) = \max_{a\in A} q_\pi(s,a)$$
     - Therefore $v_\pi(s)=v_*(s)$ for all $s\in S$
     - **So $\pi$ is an optimal policy**
@@ -40,7 +40,7 @@
 ### TD Learning
 - Learn from incomplete episodes, by bootstrapping
 - policy $\pi$ is given
-- Update a guess towoards a guess (estimated return)
+- Update a guess towards a guess (estimated return)
   - $$V(S_t) \larr V(S_t)+\alpha(R_{t+1}+\gamma V(S_{t+1})-V(S_t))$$
   - TD target: $R_{t+1}+\gamma V(S_{t+1})$
   - TD error: $\delta_t=R_{t+1}+\gamma V(S_{t+1})-V(S_t)$
@@ -57,7 +57,7 @@
 ![alt text](image.png)
 ## Control: Policy Iteration
 - Greedy policy improvement over V(s) requires model of MDP
-- Greedy policy improvement over Q(s,a) is model-free
+- But, greedy policy improvement over Q(s,a) is model-free
   - $$\pi'(s)=\argmax_{a\in A} Q(s,a)$$
 - $\epsilon$-Greedy Exploration
   - $$\pi(a|s)=\begin{cases}\frac{\epsilon}{m} + 1 - \epsilon & \text{if } a^* = \arg\max\limits_{a \in \mathcal{A}} Q(s, a) \\ \frac{\epsilon}{m} & \text{otherwise} \end{cases}$$
@@ -107,7 +107,7 @@
   - 환경과 상호작용에 필요, 하지만 업데이트에는 쓰이지 않음
 - But we consider alternative successor action $A'\sim \pi(\cdot|S_t)$
   - 학습(업데이트)에 사용되는 대체 행동, target policy 기준
-- Update Q(S_t,A_t) towards value of alternative action
+- Update $Q(S_t,A_t)$ towards value of alternative action
   - $$Q(S_t,A_t) \larr Q(S_t,A_t)+\alpha(R_{t+1}+\gamma Q(S_{t+1},A')-Q(S_t,A_t))$$
 - Improve taget policy π (which is greedy)
   - $\pi(S_{t+1})=\argmax_{a'}Q(S_{t+1},a')$
@@ -116,8 +116,7 @@
     - $$R_{t+1} + \gamma Q(S_{t+1}, A')=R_{t+1} + \gamma Q(S_{t+1}, \argmax _{a'}Q(S_{t+1},a'))=R_{t+1} + \max_{a'}\gamma Q(S_{t+1}, A')$$
   - ![alt text](image-3.png)
 
-# Model-Free with Function Approximation
-## Function Approximation
+# Function Approximation
 - Estimate value function
   - $\hat{v}(s,w) \approx v_{\pi}(s)$
   - $\hat{q}(s,a,w) \approx q_{\pi}(s,a)$
@@ -131,7 +130,7 @@
 - If, $\hat{v}(S,w)=x(S)^{\top}w$ 
   - $J(\mathbf{w}) = \mathbb{E}_\pi \left[ \left( v_\pi(S) - \mathbf{x}(S)^\top \mathbf{w} \right)^2 \right]$
   - $\Delta w=\alpha(v_{\pi}(S)-\hat{v}(S,w))x(S)$
-## Using v(S)
+## State Value Function Gradient
 - MC
   - $\Delta w=\alpha(G_t-\hat{v}(S,w))\nabla_w\hat{v}(S_t,w)$
   - $=\alpha(G_t-\hat{v}(S,w))x(S_t)$
@@ -142,7 +141,7 @@
   - TD(λ)
     - $\Delta w=\alpha(G_t^λ-\hat{v}(S_t,w))\nabla_w\hat{v}(S_t,w)$
 
-## Using q(S,A)
+## Action Value Function Gradient
 - MC
   - $\Delta w=\alpha(G_t-\hat{q}(S_t,A_t,w))\nabla_w\hat{s}(S_t,A_t,w)$
 - TD
@@ -153,3 +152,45 @@
       - $\Delta w=\alpha(q_t^λ-\hat{q}(S_t,A_t,w))\nabla_w\hat{q}(S_t,A_t,w)$
     - Backward View: 
       - $\Delta w=\alpha \delta_t E_t$
+## Batch Methods
+- Experience D consisting of <state, value> piars
+  - $D=\left \{<s_1,v_1^{\pi}>,<s_2,v_2^{\pi}>,...,<s_T,v_T^{\pi}> \right \}$
+  - $LS(w)=\sum_{t=1}^T(v_t^{\pi}-\hat{v}(s_t,w))^2 = \mathbb{E}_D \left [ (v^{\pi}-\hat{v}(s,w))\right ]$
+- Stochastic Gradient Descent
+  1. Sample state, value from experience
+    $$<s,v^{\pi}> \sim D$$
+  2. Apply stochastic gradient descent update
+    $$\Delta w=\alpha (v^{\pi}-\hat{v}(s,w))\nabla_w\hat{v}(s,w)$$
+### Deep Q-Networks (DQN)
+- DQN = Experience Replay + Fixed Q-Targets
+1. Take action $a_t$ according to ε-greedy policy
+2. Store transition $(s_t,a_t,r_{t+1},s_{t+1})$ in replay memory D
+3. Sample rendom mini-batch of transitions $(s,a,r,s')$ from D
+4. Compute Q-learning targets w.r.t. old, fixed parameters $w^-$
+5. Optimise MSE between Q-network and Q-learning targets
+$$L_i(w_i)=\mathbb{E}_s,a,r,s' \sim D_i \left [ \left ( r + \gamma \max_{a'} Q(s',a';w_i^-)-Q(s,a;w) \right )\right ]$$
+1. Using variant of stochastic gradient descent
+
+# Policy Gradient
+- Parametrise the policy
+$$\pi_{\theta} (s,a)=\mathbb{P}[s|a,\theta]$$
+- Search for a local maximum in $J(\theta)$ by ascending the gradient of the policy
+  - $\Delta \theta=\alpha \nabla_{\theta}J(\theta)$
+  - Policy Gradient is 
+    - $$\nabla_\theta J(\theta) = 
+\begin{pmatrix}
+\frac{\partial J(\theta)}{\partial \theta_1} \\
+\vdots \\
+\frac{\partial J(\theta)}{\partial \theta_n}
+\end{pmatrix}$$
+## Policy Objective Functions
+- Goal: Find the best $\theta$
+- Episodic Environments: Use start value
+  - $J_i(\theta)=V^{\pi_{\theta}}(s_1)=\mathbb{E}_{\pi_{\theta}}[v_1]$
+- Continuing Environments
+  - Use average value
+    - $J_{av}v(\theta)=\sum_s d^{\pi_{\theta}}(s)V^{\pi_{\theta}}(s)$
+  - Use average reward per time-step
+    - $J_{av}v(\theta)=\sum_s d^{\pi_{\theta}}(s) \sum \pi_{\theta}(s,a)R_s^a$
+  - $d^{\pi_{\theta}}$: Stationary Distribution of Markov Chain
+    - 정착 분포: 어떤 상태에 얼마나 자주 머무는가 → 일종의 가중치 역할
