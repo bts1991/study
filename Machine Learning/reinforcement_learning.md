@@ -129,10 +129,27 @@
   - 샘플 데이터 대상 (Stochastic)
     - $\Delta \mathbf{w} = \alpha \left[ \left( v_\pi(S) - \hat{v}(S, \mathbf{w}) \right) \nabla_{\mathbf{w}} \hat{v}(S, \mathbf{w}) \right]$
 - If, $\hat{v}(S,w)=x(S)^{\top}w$ 
-  - $J(\mathbf{w}) = \mathbb{E}_\pi \left[ \left( v_\pi(S) - \mathbf{x}(S)^\top \mathbf{w} \right)^2 \right]
-$
+  - $J(\mathbf{w}) = \mathbb{E}_\pi \left[ \left( v_\pi(S) - \mathbf{x}(S)^\top \mathbf{w} \right)^2 \right]$
   - $\Delta w=\alpha(v_{\pi}(S)-\hat{v}(S,w))x(S)$
-### MC
-- $\Delta w=\alpha(G_t-\hat{v}(S,w))\nabla_w\hat{v}(S_t,w)$
-### TD
-- TD(0): $\Delta w=\alpha(R_{t+1}-\lambda\hat{v}(S_{t+1},w))\nabla_w\hat{v}(S_t,w)$
+## Using v(S)
+- MC
+  - $\Delta w=\alpha(G_t-\hat{v}(S,w))\nabla_w\hat{v}(S_t,w)$
+  - $=\alpha(G_t-\hat{v}(S,w))x(S_t)$
+- TD
+  - TD(0)
+    - $\Delta w=\alpha(R_{t+1}-\lambda\hat{v}(S_{t+1},w)-\hat{v}(S_t,w))\nabla_w\hat{v}(S_t,w)$
+    - $=\alpha\delta x(S)$
+  - TD(λ)
+    - $\Delta w=\alpha(G_t^λ-\hat{v}(S_t,w))\nabla_w\hat{v}(S_t,w)$
+
+## Using q(S,A)
+- MC
+  - $\Delta w=\alpha(G_t-\hat{q}(S_t,A_t,w))\nabla_w\hat{s}(S_t,A_t,w)$
+- TD
+  - TD(0)
+    - $\Delta w=\alpha(R_{t+1}-\lambda\hat{q}(S_{t+1},A_{t+1},w)-\hat{q}(S_t,A_t,w))\nabla_w\hat{q}(S_t,A_t,w)$
+  - TD(λ)
+    - Forward View:
+      - $\Delta w=\alpha(q_t^λ-\hat{q}(S_t,A_t,w))\nabla_w\hat{q}(S_t,A_t,w)$
+    - Backward View: 
+      - $\Delta w=\alpha \delta_t E_t$
