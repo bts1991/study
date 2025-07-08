@@ -184,9 +184,9 @@ $$\pi_{\theta} (s,a)=\mathbb{P}[s|a,\theta]$$
 \frac{\partial J(\theta)}{\partial \theta_n}
 \end{pmatrix}$$
 ## Policy Objective Functions
-- Goal: Find the best $\theta$
-- Episodic Environments: Use start value
-  - $J_i(\theta)=V^{\pi_{\theta}}(s_1)=\mathbb{E}_{\pi_{\theta}}[v_1]$
+### Goal: Find the best $\theta$
+- Episodic Environments: use start value
+  -  $J_i(\theta)=V^{\pi_{\theta}}(s_1)=\mathbb{E}_{\pi_{\theta}}[v_1]$
 - Continuing Environments
   - Use average value
     - $J_{av}v(\theta)=\sum_s d^{\pi_{\theta}}(s)V^{\pi_{\theta}}(s)$
@@ -194,11 +194,38 @@ $$\pi_{\theta} (s,a)=\mathbb{P}[s|a,\theta]$$
     - $J_{av}v(\theta)=\sum_s d^{\pi_{\theta}}(s) \sum \pi_{\theta}(s,a)R_s^a$
   - $d^{\pi_{\theta}}$: Stationary Distribution of Markov Chain
     - 정착 분포: 어떤 상태에 얼마나 자주 머무는가 → 일종의 가중치 역할
-- One-Step MDP
+### One-Step MDP
   - Starting in state s ~ d(s)
   - Terminating after one time-step with reward r
   - $J(\theta)=\mathbb{E}_{\pi_{\theta}}[r]=\sum_{s \in S}d(s)\sum_{a \in A}\pi_{\theta}(s,a)R_{s,a}$
-  - $\nabla_{\theta}J(\theta)=\sum_{s \in S}d(s)\sum_{a \in A}\pi_{\theta}(s,a)\nabla_{\theta}\log \pi_{\theta}(s,a)R_{s,a}=\mathbb{E}_{\pi_{\theta}}[\nabla_{\theta}\log \pi_{\theta}(s,a)r]$
-- Softmax Policy
-  - $$\pi_\theta(s, a) = \frac{e^{\phi(s, a)^T \theta}}{\sum_{a'} e^{\phi(s, a')^T \theta}}
-$$
+  - $\nabla_{\theta}J(\theta)=\sum_{s \in S}d(s)\sum_{a \in A}\pi_{\theta}(s,a)\nabla_{\theta}\log \pi_{\theta}(s,a)R_{s,a}$
+    - $=\mathbb{E}_{\pi_{\theta}}[\nabla_{\theta}\log \pi_{\theta}(s,a)r]$
+### Softmax Policy
+  - $$\pi_\theta(s, a) = \frac{e^{\phi(s, a)^T \theta}}{\sum_{a'} e^{\phi(s, a')^T \theta}}$$
+  - $$\nabla_\theta \log \pi_\theta(s,a)= \phi(s,a)-\mathbb{E}_{\pi_\theta}[\phi(s,\cdot)]$$
+### Policy Gradient Theorem, multi-step MDPs
+  - Replace instantaneous reward $r$ with long-term value $Q^{\pi_\theta}(s,a)$
+  - $$\nabla_{\theta}J(\theta)=\mathbb{E}_{\pi_{\theta}}[\nabla_{\theta}\log \pi_{\theta}(s,a)Q^{\pi_\theta}(s,a)]$$
+### MC Policy Gradient (REINFORCE)
+- Update parameters by stochastic gradient ascent
+- Use return $v_t$ as an unbiased sample of $Q^{\pi\theta}(s_t,a_t)$
+  - $$\Delta\theta=\alpha\nabla_{\theta}\log \pi_{\theta}(s_t,a_t)v_t$$
+![alt text](image-7.png)
+## Actor-Critic Policy Gradient
+- Monte-Carlo policy gradient still has high variance
+- Use critic to estimate the action-value function
+  - $$Q_w(s,a)\approx Q^{\pi_\theta}(s,a)$$
+### Actor-Critic Algorithms
+- Critic
+  - Action value fuction approximation
+    - $Q_w(s,a)=\phi(s,a)^\top w$
+  - Update action-value function parameters $w$ by linear TD(0)
+- Actor
+  - Update policy parameters $\theta$, in direction suggested by critic
+- Follow an approximate policy gradient
+  - $$\nabla_\theta J(\theta) \approx \mathbb{E}_{\pi\theta}[\nabla_{\theta}\log \pi_{\theta}(s,a)Q_w(s,a)]$$
+  - $$\Delta\theta=\alpha\nabla_{\theta}\log \pi_{\theta}(s,a)Q_w(s,a)$$
+![alt text](image-4.png)
+
+###
+![alt text](image-6.png)
