@@ -199,3 +199,6 @@ $$\pi_{\theta} (s,a)=\mathbb{P}[s|a,\theta]$$
   - Terminating after one time-step with reward r
   - $J(\theta)=\mathbb{E}_{\pi_{\theta}}[r]=\sum_{s \in S}d(s)\sum_{a \in A}\pi_{\theta}(s,a)R_{s,a}$
   - $\nabla_{\theta}J(\theta)=\sum_{s \in S}d(s)\sum_{a \in A}\pi_{\theta}(s,a)\nabla_{\theta}\log \pi_{\theta}(s,a)R_{s,a}=\mathbb{E}_{\pi_{\theta}}[\nabla_{\theta}\log \pi_{\theta}(s,a)r]$
+- Softmax Policy
+  - $$\pi_\theta(s, a) = \frac{e^{\phi(s, a)^T \theta}}{\sum_{a'} e^{\phi(s, a')^T \theta}}
+$$
