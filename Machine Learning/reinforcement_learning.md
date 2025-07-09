@@ -229,3 +229,39 @@ $$\pi_{\theta} (s,a)=\mathbb{P}[s|a,\theta]$$
 
 ###
 ![alt text](image-6.png)
+
+## PPO (Proximal Policy Optimization)
+- 목표
+  - 좋은 행동은 더 자주 하게 하고, 나쁜 행동은 덜 하게 하자.
+  - 단, **"정책이 너무 크게 변하지 않도록 천천히 학습"**하는게 PPO의 핵심
+    - 정책의 성능을 평가할 때 Advantage를 사용
+    - 정책 업데이트를 “너무 많이” 하지 않도록 제한
+- Objective Function (목적함수)
+$$L^{\text{CLIP}}(\theta) = \mathbb{E}_t \left[ \min \left( r_t(\theta) \hat{A}_t,\ \text{clip}(r_t(\theta),\ 1 - \epsilon,\ 1 + \epsilon)\ \hat{A}_t \right) \right]$$
+  - $r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)}$: 새로운 정책이 예전보다 행동 $a_t$를 더 자주/덜 자주 선택하는 비율
+    - $a_t > 1$: 더 자주 선택
+    - $a_t < 1$: 덜 자주 선택
+  - $\hat{A_t}$: Advantage function
+    - 이 행동이 얼마나 좋은지
+    - 종류
+      - MC: $A_t = R_t-V(S_t)$
+      - TD(0): $A_t=\delta_t=r_t+\gamma V(s_{t+1})-V(s_t)$
+      - GAE (Generalized Advantage Estimation): $A_t=\sum_{l=0}^{\infin}(\gamma \lambda)^l \delta_{t+1}$
+  - ϵ: 정책이 바뀌는 정도를 제한하는 하이퍼파라미터 (예: 0.2)
+  - Clip
+    - 값을 일정 범위 내로 제한(clipping)하는 함수
+    - $$\text{clip}(x, a, b) = \begin{cases}a & \text{if } x < a \\x & \text{if } a \le x \le b \\b & \text{if } x > b\end{cases}$$
+    - 여기서의 역할
+      - $r_t$가 1보다 크면: 행동을 더 자주 선택하게 만듦
+      - $r_t$가 1보다 작으면: 행동 확률을 줄임
+    - → 안정적인 학습!
+- 전체 손실 함수
+$$L=L^{CLIP}(\theta)-c_1\cdot L^{VF}+c_2 \cdot S[\pi_\theta]$$
+  - $L^{VF}$: 상태 가치 손실 함수 (MSE)
+  - $S[\pi_\theta]$: 엔트로피 보너스 (탐색성 유지)
+  - $c_1$, $c_2$: 가중치 하이퍼파라미터
+- PPO 학습 루프 요약
+  1. 여러 에피소드 동안 정책에 따라 환경에서 행동
+  2. 경험을 모아서 Advantage 계산 (GAE)
+  3. 정책과 가치함수 네트워크를 minibatch SGD로 여러 번 업데이트
+  4. 위 과정을 반복
