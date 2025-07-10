@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # 하이퍼파라미터
-EPISODES = 1000           # 학습할 에피소드 수
+EPISODES = 100           # 학습할 에피소드 수
 ALPHA = 0.1               # 학습률 (learning rate)
 GAMMA = 0.99              # 할인율 (future reward 반영 정도)
 EPSILON_START = 1.0       # ε-greedy 시작값
