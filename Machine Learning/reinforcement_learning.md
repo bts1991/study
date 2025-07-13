@@ -165,11 +165,11 @@
 - DQN = Experience Replay + Fixed Q-Targets
 1. Take action $a_t$ according to ε-greedy policy
 2. Store transition $(s_t,a_t,r_{t+1},s_{t+1})$ in replay memory D
-3. Sample rendom mini-batch of transitions $(s,a,r,s')$ from D
+3. Sample random mini-batch of transitions $(s,a,r,s')$ from D
 4. Compute Q-learning targets w.r.t. old, fixed parameters $w^-$
 5. Optimise MSE between Q-network and Q-learning targets
 $$L_i(w_i)=\mathbb{E}_s,a,r,s' \sim D_i \left [ \left ( r + \gamma \max_{a'} Q(s',a';w_i^-)-Q(s,a;w) \right )\right ]$$
-1. Using variant of stochastic gradient descent
+6. Using variant of stochastic gradient descent
 
 # Policy Gradient
 - Parametrise the policy
