@@ -244,6 +244,7 @@ def run(agent_class, label):
                 print('==================== count: ', count,' =====================')
                 action = agent.act(state)
                 next_state, reward, done, _, _ = env.step(action)
+                print('End? ', done)
                 agent.memorize(state, action, reward, next_state, done)
                 agent.train()
             else:
