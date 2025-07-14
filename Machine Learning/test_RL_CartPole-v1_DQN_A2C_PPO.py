@@ -2,6 +2,7 @@ import gym
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 import matplotlib.pyplot as plt
 from collections import deque
@@ -137,94 +138,110 @@ class DQNAgent:
         # eps_min보다 작아지지 않도록 제한
 
 
-# # A2C 에이전트
-# class A2CAgent:
-#     def __init__(self):
-#         self.actor = MLP(state_dim, action_dim).to(device)
-#         self.critic = MLP(state_dim, 1).to(device)
-#         self.optimizer = optim.Adam(
-#             list(self.actor.parameters()) + list(self.critic.parameters()), lr=LR
-#         )
+# A2C 에이전트
+class A2CAgent:
+    def __init__(self):
+        self.actor = MLP(state_dim, action_dim).to(device) # 각 행동에 대한 확률 분포
+        self.critic = MLP(state_dim, 1).to(device) # Action value fuction approximation
+        # 주어진 상태 s에 대해 미래의 누적 보상(return)을 예측하는 가치 함수
+        # 출력: V(s) 또는 Q(s, a) 형태의 scalar 값
+        # 학습 목표: actor가 얼마나 "잘" 행동했는지 판단 기준 제공
+        self.optimizer = optim.Adam(
+            list(self.actor.parameters()) + list(self.critic.parameters()), lr=LR
+        ) # actor와 critic의 모든 파라미터를 하나의 옵티마이저로 함께 업데이트
 
-#     def act(self, state):
-#         state = torch.FloatTensor(state).unsqueeze(0).to(device)
-#         logits = self.actor(state)
-#         dist = torch.distributions.Categorical(logits=logits)
-#         action = dist.sample()
-#         return action.item(), dist.log_prob(action)
+    def act(self, state):
+        state = torch.FloatTensor(state).unsqueeze(0).to(device) # 상태를 float형 텐서로 변환
+        print("state.tensor: ", state)
+        logits = self.actor(state) # 액션에 대한 점수 (정책 확률 분포의 logit)
+        print("logits: ", logits)
+        print("probs:", F.softmax(logits, dim=-1))
+        dist = torch.distributions.Categorical(logits=logits)
+        print("dist: ", dist)
+        # Categorical: 다항 분포로부터 행동 샘플링
+        action = dist.sample() # 위 확률 분포에 따라 행동 하나를 무작위로 선택
+        print("action: ", action)
+        return action.item(), dist.log_prob(action)
+        # log_prob(action): 샘플링된 행동의 로그확률 (나중에 정책 경사 계산에 사용됨)
+        # ln(π(a|s)), 즉 action이 선택될 확률의 로그 값을 계산
+        
+    def train(self, trajectory): # 학습 목표: 좋은 행동의 확률을 높이고, 나쁜 행동의 확률을 낮추는 것
+        states, actions, rewards, log_probs = zip(*trajectory) # 에피소드 전체 데이터를 분해해서 각 항목으로 리스트화
+        returns = []
+        G = 0
+        for r in reversed(rewards):
+            G = r + GAMMA * G
+            returns.insert(0, G)
+        # 누적 보상, 뒤에서부터 앞으로 계산하여 리스트 형태로 저장
 
-#     def train(self, trajectory):
-#         states, actions, rewards, log_probs = zip(*trajectory)
-#         returns = []
-#         G = 0
-#         for r in reversed(rewards):
-#             G = r + GAMMA * G
-#             returns.insert(0, G)
+        # states = torch.FloatTensor(states).to(device)
+        states = torch.FloatTensor(np.array(states)).to(device)
+        actions = torch.LongTensor(actions).to(device)
+        returns = torch.FloatTensor(returns).unsqueeze(1).to(device)
+        log_probs = torch.stack(log_probs).to(device)
 
-#         states = torch.FloatTensor(states).to(device)
-#         actions = torch.LongTensor(actions).to(device)
-#         returns = torch.FloatTensor(returns).unsqueeze(1).to(device)
-#         log_probs = torch.stack(log_probs).to(device)
+        values = self.critic(states) # V(s)
+        advantage = returns - values # A(s, a), Advantage = 실제 return - 예측된 value, 이 값을 통해 정책 업데이트 시 방향성을 반영
 
-#         values = self.critic(states)
-#         advantage = returns - values
+        actor_loss = -(log_probs * advantage.detach()).mean()
+        # Advantage가 클수록 log_prob를 크게 하도록(즉, 해당 행동의 확률을 높이도록) 학습 => Loss 함수를 최소화 하도록 유도
+        # detach()는 Critic 네트워크에 그래디언트가 흘러가지 않게 막음
+        critic_loss = nn.MSELoss()(values, returns)
+        # 예측한 V(s)와 실제 Gₜ 사이의 MSE 손실
+        loss = actor_loss + critic_loss
 
-#         actor_loss = -(log_probs * advantage.detach()).mean()
-#         critic_loss = nn.MSELoss()(values, returns)
-#         loss = actor_loss + critic_loss
-
-#         self.optimizer.zero_grad()
-#         loss.backward()
-#         self.optimizer.step()
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
 
 
-# # PPO 에이전트
-# class PPOAgent:
-#     def __init__(self, clip_eps=0.2):
-#         self.actor = MLP(state_dim, action_dim).to(device)
-#         self.critic = MLP(state_dim, 1).to(device)
-#         self.optimizer = optim.Adam(
-#             list(self.actor.parameters()) + list(self.critic.parameters()), lr=LR
-#         )
-#         self.clip_eps = clip_eps
+# PPO 에이전트
+class PPOAgent:
+    def __init__(self, clip_eps=0.2):
+        self.actor = MLP(state_dim, action_dim).to(device)
+        self.critic = MLP(state_dim, 1).to(device)
+        self.optimizer = optim.Adam(
+            list(self.actor.parameters()) + list(self.critic.parameters()), lr=LR
+        )
+        self.clip_eps = clip_eps
 
-#     def act(self, state):
-#         state = torch.FloatTensor(state).unsqueeze(0).to(device)
-#         logits = self.actor(state)
-#         dist = torch.distributions.Categorical(logits=logits)
-#         action = dist.sample()
-#         return action.item(), dist.log_prob(action), dist
+    def act(self, state):
+        state = torch.FloatTensor(state).unsqueeze(0).to(device) 
+        logits = self.actor(state)
+        dist = torch.distributions.Categorical(logits=logits)
+        action = dist.sample()
+        return action.item(), dist.log_prob(action), dist
 
-#     def train(self, trajectory):
-#         states, actions, rewards, old_log_probs = zip(*trajectory)
-#         returns = []
-#         G = 0
-#         for r in reversed(rewards):
-#             G = r + GAMMA * G
-#             returns.insert(0, G)
+    def train(self, trajectory):
+        states, actions, rewards, old_log_probs = zip(*trajectory)
+        returns = []
+        G = 0
+        for r in reversed(rewards):
+            G = r + GAMMA * G
+            returns.insert(0, G)
 
-#         states = torch.FloatTensor(states).to(device)
-#         actions = torch.LongTensor(actions).to(device)
-#         returns = torch.FloatTensor(returns).unsqueeze(1).to(device)
-#         old_log_probs = torch.stack(old_log_probs).detach().to(device)
+        states = torch.FloatTensor(states).to(device)
+        actions = torch.LongTensor(actions).to(device)
+        returns = torch.FloatTensor(returns).unsqueeze(1).to(device)
+        old_log_probs = torch.stack(old_log_probs).detach().to(device)
 
-#         for _ in range(4):  # K epochs
-#             logits = self.actor(states)
-#             dist = torch.distributions.Categorical(logits=logits)
-#             new_log_probs = dist.log_prob(actions)
-#             ratio = torch.exp(new_log_probs - old_log_probs)
-#             values = self.critic(states)
-#             advantage = returns - values.detach()
+        for _ in range(4):  # K epochs
+            logits = self.actor(states)
+            dist = torch.distributions.Categorical(logits=logits)
+            new_log_probs = dist.log_prob(actions)
+            ratio = torch.exp(new_log_probs - old_log_probs)
+            values = self.critic(states)
+            advantage = returns - values.detach()
 
-#             surr1 = ratio * advantage
-#             surr2 = torch.clamp(ratio, 1 - self.clip_eps, 1 + self.clip_eps) * advantage
-#             actor_loss = -torch.min(surr1, surr2).mean()
-#             critic_loss = nn.MSELoss()(values, returns)
-#             loss = actor_loss + critic_loss
+            surr1 = ratio * advantage
+            surr2 = torch.clamp(ratio, 1 - self.clip_eps, 1 + self.clip_eps) * advantage
+            actor_loss = -torch.min(surr1, surr2).mean()
+            critic_loss = nn.MSELoss()(values, returns)
+            loss = actor_loss + critic_loss
 
-#             self.optimizer.zero_grad()
-#             loss.backward()
-#             self.optimizer.step()
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
 
 # 실험 실행 함수
@@ -234,11 +251,12 @@ def run(agent_class, label):
     for ep in range(EPISODES):
         print('==================== episode: ', ep,' =====================')
         state, _ = env.reset()
+        print('init.state: ', state)
         done = False
         score = 0
-        trajectory = []
-        count = 0
-        while not done:
+        trajectory = [] # A2C, PPO에서 학습에 사용하는 (상태, 행동, 보상, 로그확률) 저장용
+        count = 0 # 디버깅용 루프 카운터 (DQN에서만 사용)
+        while not done: # 한 스텝, 한 스텝 진행하다가 특정 state에서 더 이상 진행할 수 없으면 done = True를 반환
             if label == "DQN":
                 count = count + 1
                 print('==================== count: ', count,' =====================')
@@ -248,24 +266,32 @@ def run(agent_class, label):
                 agent.memorize(state, action, reward, next_state, done)
                 agent.train()
             else:
+                count = count + 1
+                print('==================== count: ', count,' =====================')
                 action, *log = agent.act(state)
+                print('action: ', action)
+                print('log_prob: ', *log)
                 next_state, reward, done, _, _ = env.step(action)
+                print("next_state, reward: ", (next_state, reward))
+                print('End? ', done)
                 if label == "A2C":
                     trajectory.append((state, action, reward, log[0]))
+                    # 학습에 사용할 데이터를 수집
+                    # trajectory는 한 에피소드 동안의 모든 transition을 저장한 리스트
                 else:
                     trajectory.append((state, action, reward, log[0]))  # PPO
             score += reward
             state = next_state
         scores.append(score)
         if label != "DQN":
-            agent.train(trajectory)
+            agent.train(trajectory) # 한 에피소드 끝나면 한 번에 학습
         if (ep + 1) % 10 == 0:
             print(f"[{label}] Episode {ep+1}: Avg Score = {np.mean(scores[-10:]):.2f}")
     return scores
 
 
-dqn_scores = run(DQNAgent, "DQN")
-# a2c_scores = run(A2CAgent, "A2C")
+# dqn_scores = run(DQNAgent, "DQN")
+a2c_scores = run(A2CAgent, "A2C")
 # ppo_scores = run(PPOAgent, "PPO")
 
 # # 시각화
