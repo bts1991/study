@@ -11,7 +11,7 @@ import random
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # 하이퍼파라미터
-EPISODES = 10 # 하나의 에피소드는 막대기를 넘어뜨리거나 최대 시간(500 step)에 도달할 때까지의 시퀀스
+EPISODES = 100 # 하나의 에피소드는 막대기를 넘어뜨리거나 최대 시간(500 step)에 도달할 때까지의 시퀀스
 # 에피소드 마다 스텝의 개수가 달라질 수 있음, 메모리에 저장되는 개수가 달라짐
 GAMMA = 0.99
 LR = 1e-3 # 학습률(Learning Rate), 1e-3은 0.001
@@ -173,14 +173,21 @@ class A2CAgent:
             G = r + GAMMA * G
             returns.insert(0, G)
         # 누적 보상, 뒤에서부터 앞으로 계산하여 리스트 형태로 저장
+        # print('returns: ', returns)
 
         # states = torch.FloatTensor(states).to(device)
         states = torch.FloatTensor(np.array(states)).to(device)
         actions = torch.LongTensor(actions).to(device)
         returns = torch.FloatTensor(returns).unsqueeze(1).to(device)
         log_probs = torch.stack(log_probs).to(device)
+        
+        print('states.shape: ', states.shape)
+        print('actions.shape: ', actions.shape)
+        print('returns.shape: ', returns.shape)
+        print('log_probs.shape: ', log_probs.shape)
 
         values = self.critic(states) # V(s)
+        print('values.shape: ', values.shape)
         advantage = returns - values # A(s, a), Advantage = 실제 return - 예측된 value, 이 값을 통해 정책 업데이트 시 방향성을 반영
 
         actor_loss = -(log_probs * advantage.detach()).mean()
@@ -189,10 +196,12 @@ class A2CAgent:
         critic_loss = nn.MSELoss()(values, returns)
         # 예측한 V(s)와 실제 Gₜ 사이의 MSE 손실
         loss = actor_loss + critic_loss
+        # print('loss: ', loss)
 
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        print('<<<< train_end >>>>')
 
 
 # PPO 에이전트
@@ -206,10 +215,15 @@ class PPOAgent:
         self.clip_eps = clip_eps
 
     def act(self, state):
-        state = torch.FloatTensor(state).unsqueeze(0).to(device) 
+        state = torch.FloatTensor(state).unsqueeze(0).to(device)
+        print("state.tensor: ", state)
         logits = self.actor(state)
+        print("logits: ", logits)
+        print("probs:", F.softmax(logits, dim=-1))
         dist = torch.distributions.Categorical(logits=logits)
+        print("dist: ", dist)
         action = dist.sample()
+        print("action: ", action)
         return action.item(), dist.log_prob(action), dist
 
     def train(self, trajectory):
@@ -217,7 +231,7 @@ class PPOAgent:
         returns = []
         G = 0
         for r in reversed(rewards):
-            G = r + GAMMA * G
+            G = r + GAMMA * G # G: 누적 할인 보상 (return)
             returns.insert(0, G)
 
         states = torch.FloatTensor(states).to(device)
@@ -225,11 +239,22 @@ class PPOAgent:
         returns = torch.FloatTensor(returns).unsqueeze(1).to(device)
         old_log_probs = torch.stack(old_log_probs).detach().to(device)
 
+        print('states.shape: ', states.shape)
+        print('actions.shape: ', actions.shape)
+        print('returns.shape: ', returns.shape)
+        print('old_log_probs.shape: ', old_log_probs.shape)
+
         for _ in range(4):  # K epochs
             logits = self.actor(states)
+            # print('logits: ', logits)
+            print('logits.shape: ', logits.shape)
+            print('logits[0]: ', logits[0])
             dist = torch.distributions.Categorical(logits=logits)
+            print('dist: ', dist)
             new_log_probs = dist.log_prob(actions)
-            ratio = torch.exp(new_log_probs - old_log_probs)
+            print('new_log_probs.shape: ', new_log_probs.shape)
+            ratio = torch.exp(
+                new_log_probs - old_log_probs)
             values = self.critic(states)
             advantage = returns - values.detach()
 
@@ -242,6 +267,8 @@ class PPOAgent:
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+            
+        print('<<<< train_end >>>>')
 
 
 # 실험 실행 함수
@@ -249,7 +276,7 @@ def run(agent_class, label):
     scores = []
     agent = agent_class()
     for ep in range(EPISODES):
-        print('==================== episode: ', ep,' =====================')
+        print('==================== [',label,'] episode: ', ep,' =====================')
         state, _ = env.reset()
         print('init.state: ', state)
         done = False
@@ -259,7 +286,7 @@ def run(agent_class, label):
         while not done: # 한 스텝, 한 스텝 진행하다가 특정 state에서 더 이상 진행할 수 없으면 done = True를 반환
             if label == "DQN":
                 count = count + 1
-                print('==================== count: ', count,' =====================')
+                print('==================== [',label,'] episode: ', ep,' count: ', count,' =====================')
                 action = agent.act(state)
                 next_state, reward, done, _, _ = env.step(action)
                 print('End? ', done)
@@ -267,7 +294,7 @@ def run(agent_class, label):
                 agent.train()
             else:
                 count = count + 1
-                print('==================== count: ', count,' =====================')
+                print('==================== [',label,'] episode: ', ep,' count: ', count,' =====================')
                 action, *log = agent.act(state)
                 print('action: ', action)
                 print('log_prob: ', *log)
@@ -284,15 +311,16 @@ def run(agent_class, label):
             state = next_state
         scores.append(score)
         if label != "DQN":
+            print('<<<< train_start >>>>')
             agent.train(trajectory) # 한 에피소드 끝나면 한 번에 학습
         if (ep + 1) % 10 == 0:
             print(f"[{label}] Episode {ep+1}: Avg Score = {np.mean(scores[-10:]):.2f}")
     return scores
 
 
-# dqn_scores = run(DQNAgent, "DQN")
+dqn_scores = run(DQNAgent, "DQN")
 a2c_scores = run(A2CAgent, "A2C")
-# ppo_scores = run(PPOAgent, "PPO")
+ppo_scores = run(PPOAgent, "PPO")
 
 # # 시각화
 # plt.plot(dqn_scores, label="DQN")
@@ -304,3 +332,37 @@ a2c_scores = run(A2CAgent, "A2C")
 # plt.title("Performance Comparison on CartPole")
 # plt.grid()
 # plt.show()
+
+# 이동 평균 함수 정의
+def moving_average(data, window_size=10):
+    return np.convolve(data, np.ones(window_size)/window_size, mode='valid')
+
+
+# 이동 평균 계산
+dqn_ma = moving_average(dqn_scores)
+a2c_ma = moving_average(a2c_scores)
+ppo_ma = moving_average(ppo_scores)
+
+# 이동 평균 적용된 에피소드 인덱스
+episodes_ma = np.arange(len(dqn_ma))
+
+# 시각화: 원본 + 이동 평균 비교
+plt.figure(figsize=(10, 6))
+
+# 원본
+plt.plot(dqn_scores, label="DQN (raw)", alpha=0.3, color='blue')
+plt.plot(a2c_scores, label="A2C (raw)", alpha=0.3, color='orange')
+plt.plot(ppo_scores, label="PPO (raw)", alpha=0.3, color='green')
+
+# 이동 평균
+plt.plot(episodes_ma, dqn_ma, label="DQN (MA)", color='blue')
+plt.plot(episodes_ma, a2c_ma, label="A2C (MA)", color='orange')
+plt.plot(episodes_ma, ppo_ma, label="PPO (MA)", color='green')
+
+plt.xlabel("Episode")
+plt.ylabel("Total Reward")
+plt.title("Performance Comparison with Moving Average (CartPole)")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
