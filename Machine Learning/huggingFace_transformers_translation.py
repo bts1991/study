@@ -1,26 +1,52 @@
-from transformers import MarianMTModel, MarianTokenizer
+from transformers import pipeline
 
-# 영어 → 한국어: Helsinki-NLP/opus-mt-en-ko
-# 한국어 → 영어: Helsinki-NLP/opus-mt-ko-en
-# 자동 언어 감지 + 번역: facebook/nllb-200-distilled-600M
+classifier = pipeline("sentiment-analysis")
 
-# 사용할 모델명 지정
-model_name = "Helsinki-NLP/opus-mt-en-ko"  # 영어 → 한국어
-# model_name = "Helsinki-NLP/opus-mt-ko-en" # 한국어 → 영어
+# # 입력 문장
+# text = "I've been waiting for a HuggingFace course my whole life."
 
-# 토크나이저와 모델 불러오기
-tokenizer = MarianTokenizer.from_pretrained(model_name)
-model = MarianMTModel.from_pretrained(model_name)
+# # 감성 분석 실행
+# result = classifier(text)
 
-# 번역할 문장
-src_text = "I am very happy to learn machine learning with Hugging Face!"
+# # 결과 출력
+# print(result)
 
-# 토큰화 및 모델 입력
-tokens = tokenizer.prepare_seq2seq_batch([src_text], return_tensors="pt")
+# 입력 문장
+text2 = ["I've been waiting for a HuggingFace course my whole life.", "I hate this so much!", "Sometimes, I do workout."]
 
-# 번역 실행
-translated = model.generate(**tokens)
+# 감성 분석 실행
+result2 = classifier(text2)
 
-# 출력 해석
-result = tokenizer.decode(translated[0], skip_special_tokens=True)
-print("번역 결과:", result)
+# 결과 출력
+print(result2)
+
+
+from transformers import pipeline
+
+classifier = pipeline("zero-shot-classification")
+result = classifier(
+    "This is a course about the Transformers library.",
+    candidate_labels=["education", "politics", "business"],
+)
+
+print(result)
+
+
+from transformers import pipeline
+
+generator = pipeline("text-generation")
+result = generator("In this course, we will teach you how to")
+
+print(result)
+
+
+from transformers import pipeline
+
+generator = pipeline("text-generation", model = 'gpt2')
+result = generator("In this course, we will teach you how to", 
+                   max_length=50, 
+                   num_return_sequences=3, 
+                   temperature=0.7, 
+                   top_p=0.9)
+
+print(result)
