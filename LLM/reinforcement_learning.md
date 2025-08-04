@@ -16,9 +16,13 @@
     - (→ Evaluate policy → Improve policy → Evaluate policy → Improve policy → Evaluate policy → Improve policy)
   - If improvements stop
     - $$q_{\pi} (s,\pi'(s))=\max_{a\in A} q_\pi(s,a)=q_\pi(s, \pi(s)) = v_\pi(s)$$
+      - $q_\pi(s,a)$: 상태 s에서 행동 a를 선택했을 때의 행동 가치 함수(Action-Value Function), 현재 정책을 따른 결과
+      - 현재 정책 π로 얻은 q값 중 가장 높은 행동을 선택하여 새로운 정책 π'를 만듦. 즉, 정책 개선
+      - $q_{\pi} (s,\pi'(s))$: 새로운 정책의 결과가 이전 정책의 결과와 같다면 최정 정책에 도달함
+      - 이 때의 상태 가치 $v_\pi(s)$는 정책 π 하에서 최정 행동을 취했을 때 기대되는 가치
     - Bellman optimality eqation has been satisfied
       - $$v_\pi(s) = \max_{a\in A} q_\pi(s,a)$$
-    - Therefore $v_\pi(s)=v_*(s)$ for all $s\in S$
+    - Therefore $v_\pi(s)=v_*(s)$ for all $s\in S$ (*는 optimal의 의미)
     - **So $\pi$ is an optimal policy**
 ## Control: Value Iteration
   - Principle of Optimality
@@ -28,13 +32,19 @@
     - $$v_*(s)\larr \max_{a\in A} R_s^a+\gamma\sum_{s'\in S}P_{ss'}^av_*(s')$$: Bellman Optimality Equation
   - No explicit policy
   - But, 최종적으로 V(s)가 수렴한 뒤 greedy하게 policy를 추출
+  - Policy Iteration (Evaluation → Improvement) 을 하지 않아도, V(s)를 반복적으로 업데이트 하면서 implicit하게 정책 개선이 이루어짐
 # Model-Free (with Lookup Table)
+- P(s'|s,a)를 모른다
+- R(s,a,s')를 모른다
+- Lookup Table: 상태(또는 상태-행동 쌍)의 value를 명시적으로 테이블에 저장하여, 상태 s가 주어졌을 때 V(s)를 테이블에서 바로 찾아서 이용하는 방식
 ## Prediction: Policy Evaluation
 ### Monte-Carlo Learning
 - Learn from complete episodes: no bootstrapping
 - policy $\pi$ is given
 - Update V(s) incrementally after each episode
   - $$V(S_t) \larr V(S_t)+\alpha(G_t-V(S_t))$$
+  : 현재 상태의 Value와 오차(총 Return-현재 상태 Value)에 학습률(alpha)를 곱한 결과를 더한 것으로 현재 상태의 Value를 업데이트 함 (t+1이 아닌 t 시점의 value를 업데이트 하는 것)
+  : 이 때 총 Return 인 $G_t$는 에피소드가 끝난 후 누적 보상을 사용
 - Unbiased, High Variance(dependent on many random actions, transition, rewards)
 - Non-Markov property
 ### TD Learning
@@ -42,13 +52,18 @@
 - policy $\pi$ is given
 - Update a guess towards a guess (estimated return)
   - $$V(S_t) \larr V(S_t)+\alpha(R_{t+1}+\gamma V(S_{t+1})-V(S_t))$$
+  : "한 스텝 후의 가치"를 이용해서 현재 가치 추정치를 업데이트
   - TD target: $R_{t+1}+\gamma V(S_{t+1})$
   - TD error: $\delta_t=R_{t+1}+\gamma V(S_{t+1})-V(S_t)$
 - Biased, Low Variance(dependent on one random actions, transition, rewards)
 - Markov property
 - Forward View TD(λ)
+  - n-step Return을 가중 평균하여 Target을 만드는 방식
+  - λ(람다)를 통해 1-step, 2-step, ..., n-step Return을 가중합으로 섞어 최종 Return을 계산.
+  - $$G_t^\lambda=(1-\lambda)\sum_{n=1}^\infin \lambda^{n-1}G_t^{(n)}$$  
 - Backward View TD($\lambda $)
   - $$V(S_t) \larr V(S_t)+\alpha \delta_t E_t(s)$$
+  - Eligibility Trace를 활용해 과거 상태들의 책임(책임 추적)을 분배하며 업데이트하는 방식
   - $E_t(s)$: Eligibility Trace
     - Frequency heuristic + Recency heuristic
     - 과거에 얼마나 자주, 얼마나 최근에 방문했는지에 따른 credit
@@ -70,10 +85,12 @@
     - 결국 Optimal Policy 가 탄생한다.
   - $\epsilon$-greedy에서 $\epsilon_k = {1\over k}$ 일 때, $\epsilon$가 0에 수렴하여 가장 greedy한 policy 가 탄생한다.
 ### On-Policy Learning
+- 에이전트가 현재 학습 중인 정책으로 직접 행동을 선택하고, 그 정책을 개선하는 방식
 #### GLIE MC Control
   - Sample $k$th episode using $\pi$
-    - $N(S_t, A_t) \larr N(S_t, A_t)+1$
+    - $N(S_t, A_t) \larr N(S_t, A_t)+1$: 상태(S), 행동(A) 쌍에 대한 Count
     - $Q(S_t. A_t) \larr Q(S_t, A_t)+ {1 \over N(S_t, A_t)}(G_t-Q(S_t,A_t))$
+    : ${1 \over N(S_t, A_t)}$ 는 방문 횟수에 따른 학습률
   - Improve policy
     - $\epsilon \larr {1\over k}$
     - $\pi \larr$ $\epsilon$-greedy(Q)
@@ -89,11 +106,15 @@
     - $$Q(S_t,A_t) \larr Q(S_t,A_t)+\alpha(q_t^{(n)}-Q(S_t,A_t))$$
 #### Forward View Sarsa(λ), Backward View Sarsa(λ)
 ### Off-Policy Learning
+- 데이터를 수집하는 정책(행동 정책)과 학습하는 대상 정책(평가 정책)이 서로 다른 방식
 - Evaluate target policy $\pi(a|s)$ to compute $v_\pi (s)$ or $q_\pi (s,a) $
 - While following behaviour policy $\mu (a|s)$
 - Estimate the expectation of a different distribution
   - $$E_{X \sim P}[f(X)]=\sum P(X)f(X) = \sum Q(X){P(X)\over Q(X)}f(X)=E_{X\sim Q}\left[{P(X)\over Q(X)}f(X)\right]$$
-  - P(X)에서 직접 샘플링하기 어려울 때, 샘플링이 쉬운 Q(X)에서 데이터를 뽑고, P/Q로 확률비를 보정하여 P에서 결과를 추정
+  - 우리는 확률 분포 P(X)에 대해 어떤 함수 f(X)의 평균을 구하고 싶다
+  - 그런데 P(X)의 확률이 극히 드물어 샘플링이 어렵다
+  - 이 때, Q(X)의 확률 분포는 샘플링이 쉽다면
+  - 샘플링이 쉬운 Q(X)에서 데이터를 뽑고, P/Q로 확률비를 보정하여 P에서 결과를 추정할 수 있다.
 #### MC Control
 - Use returns generated from μ to evaluate π
 - Weight return $G_t$ according to similarity between policies
