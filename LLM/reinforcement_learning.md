@@ -124,7 +124,7 @@
   - $$V(S_t) \larr V(S_t)+\alpha(G_t^{\pi/\mu}-V(S_t))$$
 #### TD Control: Q-Learning
 - No importance sampling is required
-- Next action is chosed using behaviour policy $A_{t+1} \sim \mu(\cdot|S_t)$
+- Next action is chosen using behaviour policy $A_{t+1} \sim \mu(\cdot|S_t)$
   - 환경과 상호작용에 필요, 하지만 업데이트에는 쓰이지 않음
 - But we consider alternative successor action $A'\sim \pi(\cdot|S_t)$
   - 학습(업데이트)에 사용되는 대체 행동, target policy 기준
@@ -138,15 +138,20 @@
   - ![alt text](image-3.png)
 
 # Function Approximation
+- Why?
+  - State/Action 공간이 너무 커서 Table Lookup이 불가능해진다.
+  - 일반화나 고차원 환경에서 효율적인 학습을 하려면 테이블 접근법이 아닌 Neural Network 방식을 이용해야 함
 - Estimate value function
   - $\hat{v}(s,w) \approx v_{\pi}(s)$
   - $\hat{q}(s,a,w) \approx q_{\pi}(s,a)$
 - Goal
   - $J(w) = \mathbb{E}_\pi \left[ \left( v_\pi(S) - \hat{v}(S, \mathbf{w}) \right)^2 \right]$
 - Gradient Descent
-  - 전체 데이터 대상
+  - 전체 데이터 대상 파라미터 업데이트
     - $\Delta \mathbf{w} = -\frac{1}{2} \alpha \nabla_{\mathbf{w}} J(\mathbf{w}) = \alpha \, \mathbb{E}_\pi \left[ \left( v_\pi(S) - \hat{v}(S, \mathbf{w}) \right) \nabla_{\mathbf{w}} \hat{v}(S, \mathbf{w}) \right]$
-  - 샘플 데이터 대상 (Stochastic)
+  - 샘플 데이터 대상 (Stochastic) 파라미터 업데이트
+    - 샘플 하나를 이용한 업데이트
+      - 한 번 방문한 샘플만으로도 가중치를 조금씩 조정하기 때문에 연속적이고 빠르게 업데이트할 수 있음
     - $\Delta \mathbf{w} = \alpha \left[ \left( v_\pi(S) - \hat{v}(S, \mathbf{w}) \right) \nabla_{\mathbf{w}} \hat{v}(S, \mathbf{w}) \right]$
 - If, $\hat{v}(S,w)=x(S)^{\top}w$ 
   - $J(\mathbf{w}) = \mathbb{E}_\pi \left[ \left( v_\pi(S) - \mathbf{x}(S)^\top \mathbf{w} \right)^2 \right]$
@@ -164,7 +169,7 @@
 
 ## Action Value Function Gradient
 - MC
-  - $\Delta w=\alpha(G_t-\hat{q}(S_t,A_t,w))\nabla_w\hat{s}(S_t,A_t,w)$
+  - $\Delta w=\alpha(G_t-\hat{q}(S_t,A_t,w))\nabla_w\hat{q}(S_t,A_t,w)$
 - TD
   - TD(0)
     - $\Delta w=\alpha(R_{t+1}-\lambda\hat{q}(S_{t+1},A_{t+1},w)-\hat{q}(S_t,A_t,w))\nabla_w\hat{q}(S_t,A_t,w)$
@@ -174,7 +179,7 @@
     - Backward View: 
       - $\Delta w=\alpha \delta_t E_t$
 ## Batch Methods
-- Experience D consisting of <state, value> piars
+- Experience D consisting of <state, value> pairs
   - $D=\left \{<s_1,v_1^{\pi}>,<s_2,v_2^{\pi}>,...,<s_T,v_T^{\pi}> \right \}$
   - $LS(w)=\sum_{t=1}^T(v_t^{\pi}-\hat{v}(s_t,w))^2 = \mathbb{E}_D \left [ (v^{\pi}-\hat{v}(s,w))\right ]$
 - Stochastic Gradient Descent
@@ -184,26 +189,32 @@
     $$\Delta w=\alpha (v^{\pi}-\hat{v}(s,w))\nabla_w\hat{v}(s,w)$$
 ### Deep Q-Networks (DQN)
 - DQN = Experience Replay + Fixed Q-Targets
+- 왜 DQN이 필요한가?
+  - Q-Learning은 모든 (State, Action) 쌍을 테이블로 저장하는 방식인데,
+    - 상태 공간이 크거나 연속적인 경우 (예: 이미지 입력) 테이블을 만들 수 없습니다.
+  - 그래서 Q(s, a)를 Neural Network로 근사(Function Approximation) 하는 방법이 필요합니다.
+    - DQN은 Q(s, a; θ)를 학습하는 Neural Network Q-Function Approximation 방식입니다.
 1. Take action $a_t$ according to ε-greedy policy
+   1. 현재 상태 S에서 ε-greedy policy로 행동 a 선택   2. 
 2. Store transition $(s_t,a_t,r_{t+1},s_{t+1})$ in replay memory D
+   1. 환경과 상호작용하여 (S, a, r, S') 경험을 얻고, Replay Buffer에 저장
 3. Sample random mini-batch of transitions $(s,a,r,s')$ from D
+   1. Replay Buffer에서 무작위로 Minibatch 샘플링
 4. Compute Q-learning targets w.r.t. old, fixed parameters $w^-$
 5. Optimise MSE between Q-network and Q-learning targets
 $$L_i(w_i)=\mathbb{E}_s,a,r,s' \sim D_i \left [ \left ( r + \gamma \max_{a'} Q(s',a';w_i^-)-Q(s,a;w) \right )\right ]$$
+
 6. Using variant of stochastic gradient descent
+   1. 일정 주기마다 업데이트: θ⁻ ← θ (Soft update도 가능) 
 
 # Policy Gradient
 - Parametrise the policy
 $$\pi_{\theta} (s,a)=\mathbb{P}[s|a,\theta]$$
+- **Expected Return(기대 보상)**을 최대화하는 파라미터 θ를 찾는 것 → Gradient Ascent (기울기 상승)
 - Search for a local maximum in $J(\theta)$ by ascending the gradient of the policy
   - $\Delta \theta=\alpha \nabla_{\theta}J(\theta)$
   - Policy Gradient is 
-    - $$\nabla_\theta J(\theta) = 
-\begin{pmatrix}
-\frac{\partial J(\theta)}{\partial \theta_1} \\
-\vdots \\
-\frac{\partial J(\theta)}{\partial \theta_n}
-\end{pmatrix}$$
+    - $$\nabla_\theta J(\theta) = \begin{pmatrix}\frac{\partial J(\theta)}{\partial \theta_1} \\\vdots \\\frac{\partial J(\theta)}{\partial \theta_n}\end{pmatrix}$$
 ## Policy Objective Functions
 ### Goal: Find the best $\theta$
 - Episodic Environments: use start value
