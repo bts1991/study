@@ -187,6 +187,16 @@
     $$<s,v^{\pi}> \sim D$$
   2. Apply stochastic gradient descent update
     $$\Delta w=\alpha (v^{\pi}-\hat{v}(s,w))\nabla_w\hat{v}(s,w)$$
+- Batch Methods의 목적
+  - 데이터 효율성 (Sample Efficiency) 향상
+    - 온라인 방식(online methods)은 하나의 경험 (s, a, r, s')를 수집하자마자 업데이트합니다.
+    - 하지만 배치(batch) 방식은 여러 경험을 모아서 한 번에 학습하므로, 동일한 데이터를 여러 번 재활용할 수 있고 샘플 효율이 높아집니다.
+    - 특히 환경 상호작용 비용이 큰 경우(예: 실제 로봇 제어)에는 매우 중요
+  - Variance 감소 및 안정성 향상
+    - 단일 샘플 업데이트는 노이즈가 심하고 불안정할 수 있습니다.
+    - 배치 방식은 다수 샘플의 평균을 기반으로 그라디언트를 계산하므로, 업데이트가 더 안정적이고 variance가 줄어듭니다.
+    - 이는 특히 function approximation에서 **값이 발산하는 문제(divergence)**를 줄여줍니다.
+
 ### Deep Q-Networks (DQN)
 - DQN = Experience Replay + Fixed Q-Targets
 - 왜 DQN이 필요한가?
@@ -195,7 +205,7 @@
   - 그래서 Q(s, a)를 Neural Network로 근사(Function Approximation) 하는 방법이 필요합니다.
     - DQN은 Q(s, a; θ)를 학습하는 Neural Network Q-Function Approximation 방식입니다.
 1. Take action $a_t$ according to ε-greedy policy
-   1. 현재 상태 S에서 ε-greedy policy로 행동 a 선택   2. 
+   1. 현재 상태 S에서 ε-greedy policy로 행동 a 선택 
 2. Store transition $(s_t,a_t,r_{t+1},s_{t+1})$ in replay memory D
    1. 환경과 상호작용하여 (S, a, r, S') 경험을 얻고, Replay Buffer에 저장
 3. Sample random mini-batch of transitions $(s,a,r,s')$ from D
@@ -204,8 +214,11 @@
 5. Optimise MSE between Q-network and Q-learning targets
 $$L_i(w_i)=\mathbb{E}_s,a,r,s' \sim D_i \left [ \left ( r + \gamma \max_{a'} Q(s',a';w_i^-)-Q(s,a;w) \right )\right ]$$
 
-6. Using variant of stochastic gradient descent
-   1. 일정 주기마다 업데이트: θ⁻ ← θ (Soft update도 가능) 
+1. Using variant of stochastic gradient descent
+   1. $w$ 업데이트: 매 학습 스텝마다 미니배치 데이터를 사용해 SGD로 업데이트
+   2. $w^-$ 업데이트: 학습이 불안정해지는 것을 막기 위해, 즉, 직접 역전파로 학습하지 않고, w의 값을 복사/혼합해서 갱신
+      1. Hard update: 일정 주기마다 $w^- \larr w$
+      2. Soft update: 타깃 네트워크를 조금씩 현재 네트워크로 이동 ($w^- \larr \gamma w+(1-\gamma)w^-$)
 
 # Policy Gradient
 - Parametrise the policy
@@ -249,6 +262,7 @@ $$\pi_{\theta} (s,a)=\mathbb{P}[s|a,\theta]$$
   - $$Q_w(s,a)\approx Q^{\pi_\theta}(s,a)$$
 ### Actor-Critic Algorithms
 - Critic
+  - 상태 가치 V 또는 행동 가치 Q를 이용해 Actor가 얼마나 좋은 행동을 했는지 평가
   - Action value fuction approximation
     - $Q_w(s,a)=\phi(s,a)^\top w$
   - Update action-value function parameters $w$ by linear TD(0)
@@ -262,14 +276,33 @@ $$\pi_{\theta} (s,a)=\mathbb{P}[s|a,\theta]$$
 ###
 ![alt text](image-6.png)
 
+### What is Advantage?
+- Advantage는 “평균보다 얼마나 나았는가”를 알려줌
+  - 보상의 절대 크기보다는 상대적 우수성만 반영하므로 학습이 안정됨
+- $A(s,a)=Q(s,a)-V(s)$
+  - Q: 상태 s에서 행동 a를 한 후 얻을 수 있는 예상 가치
+  - V: 상태 s에서 평균적으로 기대되는 가치
+  - A > 0: 평균보다 좋은 행동
+  - A < 0: 평균보다 나쁜 행동
+- V는 Baseline의 역할을 하며, 보상의 편차를 줄여 variance를 감소시키고, gradient 추적을 안정화한다.
+  - baseline을 빼도 기댓값은 유지되기 때문에, bias는 없음
+
 ## PPO (Proximal Policy Optimization)
 - 목표
   - 좋은 행동은 더 자주 하게 하고, 나쁜 행동은 덜 하게 하자.
   - 단, **"정책이 너무 크게 변하지 않도록 천천히 학습"**하는게 PPO의 핵심
     - 정책의 성능을 평가할 때 Advantage를 사용
     - 정책 업데이트를 “너무 많이” 하지 않도록 제한
+  - Actor-Critic에서는 정책 분포가 한 스텝으로 크게 변화될 수 있음
+    - $\nabla_{\theta} J(\theta) = \mathbb{E} \left[ \nabla_{\theta} \log \pi_{\theta}(a_t \mid s_t) \cdot \hat{A}_t \right]$
+    - 현재 정책 $\pi_{\theta}$ 자체를 사용하기 때문에 한 번의 gradient step이 크다면
+    - 이전에 학습한 정책 분포와 차이가 너무 커짐
+    - 그 결과 variance가 커지고 성능이 떨어질 수 있음
+  - 그래서 PPO는 확률 비율 $r$을 사용하면서, 변화 폭이 너무 크면 클리핑으로 제한
+    - 이전 정책 대비 확률비율을 사용하게 되면, 예를 들어 이전에 많이 올렸을면 이번에는 일정 비율로만 올라감
 - Objective Function (목적함수)
 $$L^{\text{CLIP}}(\theta) = \mathbb{E}_t \left[ \min \left( r_t(\theta) \hat{A}_t,\ \text{clip}(r_t(\theta),\ 1 - \epsilon,\ 1 + \epsilon)\ \hat{A}_t \right) \right]$$
+  - min: 가능한 목적함수를 작게 만들려고 함
   - $r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)}$: 새로운 정책이 예전보다 행동 $a_t$를 더 자주/덜 자주 선택하는 비율
     - $a_t > 1$: 더 자주 선택
     - $a_t < 1$: 덜 자주 선택
