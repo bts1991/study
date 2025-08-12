@@ -244,7 +244,7 @@ class PPOAgent:
         print('returns.shape: ', returns.shape)
         print('old_log_probs.shape: ', old_log_probs.shape)
 
-        for _ in range(4):  # K epochs
+        for _ in range(4):  # K epochs, '_'의 의미는 무조건 4번 반복
             logits = self.actor(states)
             # print('logits: ', logits)
             print('logits.shape: ', logits.shape)

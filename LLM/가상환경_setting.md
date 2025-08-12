@@ -24,3 +24,7 @@ pip install gym
 
 matplotlib 설치
 pip install matplotlib
+
+
+가상환경 삭제
+Remove-Item -Recurse -Force .\myenv
